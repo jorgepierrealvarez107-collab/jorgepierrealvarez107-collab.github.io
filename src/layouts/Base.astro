@@ -31,6 +31,7 @@ const ld: Record<string, unknown> = {
 };
 if (Astro.site) ld.url = Astro.site.href;
 if (site.contacto.email) ld.email = site.contacto.email;
+if (site.contacto.telefonoVisible) ld.telephone = site.contacto.telefonoVisible;
 if (site.contacto.zonaServicio) ld.areaServed = site.contacto.zonaServicio;
 const sameAs = [site.redes.instagram, site.redes.linkedin].filter(Boolean);
 if (sameAs.length) ld.sameAs = sameAs;

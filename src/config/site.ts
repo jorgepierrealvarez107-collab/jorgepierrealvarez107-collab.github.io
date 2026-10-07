@@ -11,11 +11,13 @@ export const site = {
 
   contacto: {
     /** Número en formato internacional sin espacios ni signos, p. ej. '5215512345678'. */
-    whatsapp: null as string | null,
+    whatsapp: '523221320688' as string | null,
+    /** Teléfono tal como se muestra en pantalla. */
+    telefonoVisible: '+52 322 132 0688' as string | null,
     /** Correo público, p. ej. 'hola@alvrastudio.com'. */
-    email: null as string | null,
+    email: 'jorgepierrealvarez107@gmail.com' as string | null,
     /** Ciudad o región de servicio confirmada, p. ej. 'Ciudad de México y área metropolitana'. */
-    zonaServicio: null as string | null,
+    zonaServicio: 'Puerto Vallarta y alrededores' as string | null,
   },
 
   redes: {

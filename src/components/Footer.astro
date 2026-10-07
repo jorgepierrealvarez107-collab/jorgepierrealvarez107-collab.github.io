@@ -25,7 +25,7 @@ const { email, zonaServicio } = site.contacto;
         <p class="mono ftr__h">Contacto</p>
         <ul>
           {email && <li><a href={`mailto:${email}`}>{email}</a></li>}
-          {wa && <li><a href={wa} rel="noopener" target="_blank">WhatsApp<span class="sr-only"> (abre en una pestaña nueva)</span></a></li>}
+          {wa && <li><a href={wa} rel="noopener" target="_blank">WhatsApp {site.contacto.telefonoVisible}<span class="sr-only"> (abre en una pestaña nueva)</span></a></li>}
           {!email && !wa && <li><a href="/contacto/">Cuéntanos tu proyecto</a></li>}
           {zonaServicio && <li class="ftr__muted">{zonaServicio}</li>}
         </ul>

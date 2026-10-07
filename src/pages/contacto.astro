@@ -5,6 +5,11 @@ import { site, whatsappUrl } from '../config/site';
 const endpoint = import.meta.env.PUBLIC_CONTACT_ENDPOINT || '';
 const { email, zonaServicio } = site.contacto;
 const wa = whatsappUrl('Hola, me gustaría hablar sobre un proyecto.');
+const waNumero = site.contacto.whatsapp ?? '';
+const telefono = site.contacto.telefonoVisible;
+// Sin servicio de envío, el cuestionario se envía por WhatsApp (o correo) con el resumen ya redactado.
+const modoDirecto = !endpoint && Boolean(waNumero || email);
+const etiquetaEnviar = endpoint ? 'Enviar solicitud' : waNumero ? 'Enviar por WhatsApp' : 'Enviar por correo';
 
 const tipos = ['Vivienda nueva', 'Remodelación o ampliación', 'Comercial u oficinas', 'Otro'];
 const servicios = ['Diseño arquitectónico', 'Construcción', 'Diseño y construcción', 'Aún no lo sé'];
@@ -27,7 +32,7 @@ const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
           {(email || wa) ? (
             <ul>
               {email && <li><a class="link" href={`mailto:${email}`}>{email}</a></li>}
-              {wa && <li><a class="link" href={wa} target="_blank" rel="noopener">WhatsApp<span class="sr-only"> (abre en una pestaña nueva)</span> →</a></li>}
+              {wa && <li><a class="link" href={wa} target="_blank" rel="noopener">WhatsApp {telefono}<span class="sr-only"> (abre en una pestaña nueva)</span> →</a></li>}
             </ul>
           ) : (
             <p class="muted">Muy pronto publicaremos aquí nuestro WhatsApp y correo.</p>
@@ -37,7 +42,7 @@ const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
       </header>
 
       <div class="c__form-col">
-        <form class="qf" method="post" action={endpoint || undefined} novalidate data-form data-endpoint={endpoint} aria-describedby="qf-intro">
+        <form class="qf" method="post" action={endpoint || undefined} novalidate data-form data-endpoint={endpoint} data-wa={waNumero} data-email={email ?? ''} data-label={etiquetaEnviar} aria-describedby="qf-intro">
           <p id="qf-intro" class="sr-only">Formulario en tres pasos. Los campos marcados como obligatorios son necesarios para enviar.</p>
 
           <ol class="qf__progress mono" aria-hidden="true" data-progress>
@@ -153,12 +158,20 @@ const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
           <div class="qf__nav">
             <button type="button" class="btn btn--ghost" data-prev hidden>← Anterior</button>
             <button type="button" class="btn" data-next hidden>Siguiente <span class="arrow" aria-hidden="true">→</span></button>
-            <button type="submit" class="btn btn--accent" data-submit disabled={!endpoint}>
-              <span data-submit-label>Enviar solicitud</span> <span class="arrow" aria-hidden="true">→</span>
+            <button type="submit" class="btn btn--accent" data-submit disabled={!endpoint && !modoDirecto}>
+              <span data-submit-label>{etiquetaEnviar}</span> <span class="arrow" aria-hidden="true">→</span>
             </button>
           </div>
 
-          {!endpoint && (
+          {modoDirecto && (
+            <p class="qf__hint muted">
+              {waNumero
+                ? 'Al enviar se abrirá WhatsApp con el resumen de tu solicitud: solo tendrás que pulsar enviar.'
+                : 'Al enviar se abrirá tu correo con el resumen de tu solicitud: solo tendrás que pulsar enviar.'}
+              {waNumero && email && <> ¿Prefieres correo? <button type="button" class="qf__alt" data-mailto>Envíala por correo</button>.</>}
+            </p>
+          )}
+          {!endpoint && !modoDirecto && (
             <p class="demo-note qf__noendpoint"><strong>Muy pronto</strong> El envío en línea se activará en los próximos días. Puedes completar el cuestionario para preparar tu solicitud; por ahora no se envía.</p>
           )}
 
@@ -354,6 +367,22 @@ const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
   .qf__nav [hidden] {
     display: none;
   }
+  .qf__hint {
+    font-size: var(--t-sm);
+    max-width: 60ch;
+  }
+  .qf__alt {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .qf__status :global(a) {
+    color: var(--accent);
+  }
   .qf__status:empty {
     display: none;
   }
@@ -470,6 +499,9 @@ const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
   const done = document.querySelector<HTMLElement>('[data-done]')!;
   const summaryWrap = document.querySelector<HTMLElement>('[data-summary-wrap]')!;
   const endpoint = form.dataset.endpoint || '';
+  const waNumero = form.dataset.wa || '';
+  const emailDestino = form.dataset.email || '';
+  const etiqueta = form.dataset.label || 'Enviar solicitud';
   const startedAt = Date.now();
   let current = 0;
   let sending = false;
@@ -585,9 +617,69 @@ const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
     submit.disabled = on;
     prev.disabled = on;
     submit.setAttribute('aria-busy', String(on));
-    submitLabel.textContent = on ? 'Enviando…' : 'Enviar solicitud';
+    submitLabel.textContent = on ? 'Enviando…' : etiqueta;
     if (on) setStatus('<span style="display:flex;gap:.6rem;align-items:center"><span class="spinner" aria-hidden="true"></span> Enviando tu solicitud…</span>');
   }
+
+  function resumenTexto(d: Record<string, string>) {
+    const filas: [string, string | undefined][] = [
+      ['Proyecto', d.tipo],
+      ['Servicio', d.servicio],
+      ['Situación', d.situacion],
+      ['Ubicación', d.ubicacion],
+      ['Inicio', d.plazo],
+      ['Presupuesto', d.presupuesto],
+      ['Detalles', d.mensaje],
+      ['Nombre', d.nombre],
+      ['Correo', d.email],
+      ['Teléfono', d.telefono],
+      ['Prefiero contacto por', d.preferencia],
+    ];
+    return [
+      'Hola ALVRA STUDIO, quiero contarles sobre mi proyecto:',
+      '',
+      ...filas.filter(([, v]) => v).map(([k, v]) => `• ${k}: ${v}`),
+    ].join('\n');
+  }
+
+  function mailtoUrl(d: Record<string, string>) {
+    const asunto = `Solicitud de proyecto: ${d.tipo || 'nuevo proyecto'} — ${d.ubicacion || ''}`.trim();
+    return `mailto:${emailDestino}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(resumenTexto(d))}`;
+  }
+
+  function validarTodo(): boolean {
+    for (let i = 0; i < steps.length; i++) {
+      if (!validateStep(i)) {
+        show(i, false);
+        validateStep(i);
+        setStatus('Revisa los campos marcados antes de enviar.', true);
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Envío directo (sin servicio de formularios): abre WhatsApp o el correo con
+  // el resumen. No se muestra "enviado": el envío lo completa la persona.
+  function envioDirecto(canal: 'whatsapp' | 'correo') {
+    const d = data();
+    delete d.sitio_web;
+    const url = canal === 'whatsapp'
+      ? `https://wa.me/${waNumero}?text=${encodeURIComponent(resumenTexto(d))}`
+      : mailtoUrl(d);
+    if (canal === 'whatsapp') window.open(url, '_blank', 'noopener');
+    else window.location.href = url;
+    const nombre = canal === 'whatsapp' ? 'WhatsApp' : 'tu correo';
+    const alt = canal === 'whatsapp' && emailDestino ? ` · <a href="${mailtoUrl(d)}">Enviar por correo</a>` : '';
+    setStatus(
+      `<p>Abrimos ${nombre} con el resumen de tu solicitud. <strong>Para completarla, pulsa enviar allí.</strong></p>` +
+      `<p>¿No se abrió? <a href="${url}" ${canal === 'whatsapp' ? 'target="_blank" rel="noopener"' : ''}>Abrir ${canal === 'whatsapp' ? 'WhatsApp' : 'correo'}</a>${alt}</p>`
+    );
+  }
+
+  form.querySelector<HTMLButtonElement>('[data-mailto]')?.addEventListener('click', () => {
+    if (validarTodo()) envioDirecto('correo');
+  });
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -609,7 +701,9 @@ const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
       return;
     }
     if (!endpoint) {
-      setStatus('El formulario todavía no está conectado a un servicio de envío. <strong>Tu solicitud no se ha enviado.</strong>', true);
+      if (waNumero) envioDirecto('whatsapp');
+      else if (emailDestino) envioDirecto('correo');
+      else setStatus('El envío en línea aún no está disponible. <strong>Tu solicitud no se ha enviado.</strong>', true);
       return;
     }
 
