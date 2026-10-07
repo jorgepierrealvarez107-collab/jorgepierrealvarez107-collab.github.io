@@ -1,0 +1,142 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import Lamina from './Lamina.astro';
+import { estados, site } from '../config/site';
+
+interface Props {
+  p: CollectionEntry<'proyectos'>;
+  index?: number;
+  size?: 'lg' | 'md';
+  headingLevel?: 'h2' | 'h3';
+}
+const { p, index = 0, size = 'md', headingLevel: H = 'h3' } = Astro.props;
+const d = p.data;
+---
+<article class:list={['pc', `pc--${size}`]} data-estado={d.estado}>
+  <a class="pc__link" href={`/proyectos/${p.id}/`}>
+    <div class="pc__media">
+      <div class="pc__img pc__img--trazo" aria-hidden="true">
+        {d.trazo ? (
+          <Image src={d.trazo} alt="" widths={[480, 800, 1200]} sizes="(min-width: 900px) 50vw, 100vw" />
+        ) : (
+          <Lamina dibujo={d.dibujo} modo="trazo" />
+        )}
+      </div>
+      <div class="pc__img pc__img--obra">
+        {d.portada ? (
+          <Image src={d.portada} alt={d.portadaAlt || d.titulo} widths={[480, 800, 1200]} sizes="(min-width: 900px) 50vw, 100vw" />
+        ) : (
+          <Lamina dibujo={d.dibujo} modo="obra" />
+        )}
+      </div>
+    </div>
+    <div class="pc__meta">
+      <span class="pc__num mono" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+      <div class="pc__body">
+        <H class="pc__title display">{d.titulo}</H>
+        <p class="pc__type">{d.tipo}{d.ubicacion && ` · ${d.ubicacion}`}</p>
+      </div>
+      <div class="pc__tags">
+        <span class:list={['tag', `tag--${d.estado}`]}>{estados[d.estado].corto}</span>
+        {d.demo && site.mostrarAvisosDemo && <span class="tag tag--demo">Demo</span>}
+      </div>
+    </div>
+    {d.imagenesIA && site.mostrarAvisosDemo && <span class="pc__ia mono">Imagen IA · demo</span>}
+  </a>
+</article>
+
+<style>
+  .pc__link {
+    position: relative;
+    display: grid;
+    gap: 1rem;
+    text-decoration: none;
+    color: inherit;
+  }
+  .pc__media {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--paper-2);
+  }
+  .pc--lg .pc__media {
+    aspect-ratio: 16 / 10;
+  }
+  .pc__img {
+    position: absolute;
+    inset: 0;
+  }
+  .pc__img :global(svg),
+  .pc__img :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* Al pasar el cursor o enfocar, la obra se retira y aparece el trazo:
+     detalle secundario; la información no depende de ello. */
+  .pc__img--obra {
+    clip-path: inset(0 0 0 0);
+    transition: clip-path 0.8s var(--ease);
+  }
+  .pc__link:hover .pc__img--obra,
+  .pc__link:focus-visible .pc__img--obra {
+    clip-path: inset(0 0 0 100%);
+  }
+  .pc__ia {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.625rem;
+    background: rgb(10 20 48 / 0.8);
+    color: var(--paper);
+  }
+  .pc__img--obra :global(img) {
+    transition: transform 1.2s var(--ease);
+  }
+  .pc__meta {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 1rem;
+    align-items: start;
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--ink);
+    padding-top: 0.9rem;
+  }
+  .pc__num {
+    color: var(--graphite);
+    padding-top: 0.45rem;
+  }
+  .pc__title {
+    font-size: clamp(1.6rem, 2.4vw, 2.2rem);
+    line-height: 1.05;
+  }
+  .pc--lg .pc__title {
+    font-size: clamp(1.9rem, 3.2vw, 3rem);
+  }
+  .pc__type {
+    margin-top: 0.35rem;
+    font-size: var(--t-sm);
+    color: var(--graphite);
+  }
+  .pc__tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.4rem;
+    padding-top: 0.3rem;
+  }
+  .pc__link:hover .pc__title {
+    color: var(--accent);
+  }
+  @media (max-width: 520px) {
+    .pc__meta {
+      grid-template-columns: auto 1fr;
+    }
+    .pc__tags {
+      grid-column: 2;
+      justify-content: flex-start;
+    }
+  }
+</style>

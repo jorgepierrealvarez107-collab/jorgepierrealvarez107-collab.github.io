@@ -1,0 +1,237 @@
+---
+import { navegacion } from '../config/site';
+import Logo from './Logo.astro';
+
+interface Props { overlay?: boolean }
+const { overlay = false } = Astro.props;
+const path = Astro.url.pathname;
+const activo = (href: string) => path === href || path.startsWith(href);
+---
+<header class:list={['hdr', overlay && 'hdr--overlay is-over']} data-hdr>
+  <div class="wrap hdr__in">
+    <a class="hdr__brand" href="/" aria-label="ALVRA STUDIO, inicio">
+      <Logo />
+    </a>
+
+    <button class="hdr__toggle" type="button" aria-expanded="false" aria-controls="nav-principal" data-nav-toggle>
+      <span class="hdr__toggle-txt">Menú</span>
+      <span class="hdr__bars" aria-hidden="true"><i></i><i></i></span>
+    </button>
+
+    <nav class="hdr__nav" id="nav-principal" aria-label="Principal" data-nav>
+      <ul>
+        {navegacion.filter((n) => n.href !== '/contacto/').map((n, i) => (
+          <li>
+            <a href={n.href} aria-current={activo(n.href) ? 'page' : undefined}>
+              <span class="hdr__num" aria-hidden="true">0{i + 1}</span>{n.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <a class="btn btn--accent hdr__cta" href="/contacto/" aria-current={activo('/contacto/') ? 'page' : undefined}>
+        Cuéntanos tu proyecto
+      </a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .hdr {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  /* Sobre el video: transparente y en blanco; sólida al hacer scroll. */
+  .hdr--overlay {
+    position: fixed;
+    left: 0;
+    right: 0;
+    transition:
+      background-color 0.4s var(--ease),
+      border-color 0.4s var(--ease),
+      color 0.4s var(--ease);
+  }
+  .hdr--overlay.is-over:not(:has(.is-open)) {
+    background: transparent;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-bottom-color: rgb(255 255 255 / 0.18);
+    color: #fff;
+  }
+  .hdr--overlay.is-over:not(:has(.is-open)) :global(.logo__sub),
+  .hdr--overlay.is-over:not(:has(.is-open)) .hdr__num {
+    color: rgb(255 255 255 / 0.7);
+    border-color: rgb(255 255 255 / 0.3);
+  }
+  .hdr--overlay.is-over:not(:has(.is-open)) .hdr__toggle {
+    color: #fff;
+  }
+  .hdr__in {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: var(--header-h);
+  }
+  .hdr__brand {
+    text-decoration: none;
+    display: inline-flex;
+    padding-block: 0.5rem;
+  }
+  .hdr__nav {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 2.5vw, 2.5rem);
+  }
+  .hdr__nav ul {
+    display: flex;
+    list-style: none;
+    gap: clamp(0.75rem, 2vw, 2rem);
+  }
+  .hdr__nav ul a {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    padding-block: 0.75rem;
+    text-decoration: none;
+    font-size: var(--t-sm);
+    position: relative;
+  }
+  .hdr__num {
+    font-family: var(--f-mono);
+    font-size: 0.625rem;
+    color: var(--graphite);
+  }
+  .hdr__nav ul a::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0.45rem;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s var(--ease);
+  }
+  .hdr__nav ul a:hover::after,
+  .hdr__nav ul a[aria-current='page']::after {
+    transform: scaleX(1);
+  }
+  .hdr__nav ul a[aria-current='page']::after {
+    background: var(--accent);
+  }
+  .hdr__cta {
+    min-height: 44px;
+    padding: 0.6rem 1.1rem;
+    font-size: var(--t-sm);
+  }
+  .hdr__toggle {
+    display: none;
+  }
+
+  @media (max-width: 960px) {
+    /* Sin JS el menú queda visible y apilado; con JS se pliega. */
+    .hdr__in {
+      flex-wrap: wrap;
+    }
+    .hdr__nav {
+      width: 100%;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 1rem;
+      padding-bottom: 1.25rem;
+    }
+    .hdr__nav ul {
+      flex-direction: column;
+      gap: 0;
+    }
+    .hdr__nav ul a {
+      width: 100%;
+      padding-block: 0.9rem;
+      font-family: var(--f-display);
+      font-size: 1.9rem;
+      gap: 0.9rem;
+      border-bottom: 1px solid var(--line);
+    }
+    .hdr__nav ul a::after {
+      display: none;
+    }
+    .hdr__nav ul a[aria-current='page'] {
+      color: var(--accent);
+    }
+    .hdr__cta {
+      min-height: 52px;
+    }
+    :global(.js) .hdr__toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-height: 44px;
+      padding: 0 0.25rem;
+      background: none;
+      border: 0;
+      color: var(--ink);
+      font-family: var(--f-mono);
+      font-size: var(--t-xs);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .hdr__bars {
+      display: grid;
+      gap: 6px;
+      width: 22px;
+    }
+    .hdr__bars i {
+      display: block;
+      height: 1.5px;
+      background: currentColor;
+      transition: transform 0.3s var(--ease);
+    }
+    .hdr__toggle[aria-expanded='true'] .hdr__bars i:first-child {
+      transform: translateY(3.75px) rotate(45deg);
+    }
+    .hdr__toggle[aria-expanded='true'] .hdr__bars i:last-child {
+      transform: translateY(-3.75px) rotate(-45deg);
+    }
+    :global(.js) .hdr__nav:not(.is-open) {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Cabecera sobre el hero: se vuelve sólida en cuanto el hero deja de verse.
+  const hdr = document.querySelector<HTMLElement>('[data-hdr].hdr--overlay');
+  const heroEl = document.querySelector<HTMLElement>('[data-hero]');
+  if (hdr && heroEl) {
+    new IntersectionObserver(([e]) => hdr.classList.toggle('is-over', e.isIntersecting), {
+      rootMargin: `-${hdr.offsetHeight}px 0px 0px 0px`,
+    }).observe(heroEl);
+  } else if (hdr) {
+    hdr.classList.remove('is-over');
+  }
+
+  const btn = document.querySelector<HTMLButtonElement>('[data-nav-toggle]');
+  const nav = document.querySelector<HTMLElement>('[data-nav]');
+  if (btn && nav) {
+    const set = (open: boolean) => {
+      btn.setAttribute('aria-expanded', String(open));
+      nav.classList.toggle('is-open', open);
+      btn.querySelector('.hdr__toggle-txt')!.textContent = open ? 'Cerrar' : 'Menú';
+    };
+    btn.addEventListener('click', () => set(btn.getAttribute('aria-expanded') !== 'true'));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') {
+        set(false);
+        btn.focus();
+      }
+    });
+    matchMedia('(min-width: 961px)').addEventListener('change', (m) => m.matches && set(false));
+  }
+</script>

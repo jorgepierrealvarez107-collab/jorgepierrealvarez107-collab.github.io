@@ -1,0 +1,116 @@
+---
+import { navegacion, site, whatsappUrl } from '../config/site';
+import Logo from './Logo.astro';
+
+const wa = whatsappUrl('Hola, me gustaría hablar sobre un proyecto.');
+const { email, zonaServicio } = site.contacto;
+---
+<footer class="ftr on-ink">
+  <div class="wrap">
+    <div class="ftr__top grid">
+      <div class="ftr__claim">
+        <p class="display">Del primer trazo<br /><span class="acc">a la obra terminada.</span></p>
+        <a class="btn btn--accent" href="/contacto/">Cuéntanos tu proyecto <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+
+      <nav class="ftr__col" aria-label="Pie de página">
+        <p class="mono ftr__h">Sitio</p>
+        <ul>
+          <li><a href="/">Inicio</a></li>
+          {navegacion.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+        </ul>
+      </nav>
+
+      <div class="ftr__col">
+        <p class="mono ftr__h">Contacto</p>
+        <ul>
+          {email && <li><a href={`mailto:${email}`}>{email}</a></li>}
+          {wa && <li><a href={wa} rel="noopener" target="_blank">WhatsApp<span class="sr-only"> (abre en una pestaña nueva)</span></a></li>}
+          {!email && !wa && <li><a href="/contacto/">Cuéntanos tu proyecto</a></li>}
+          {zonaServicio && <li class="ftr__muted">{zonaServicio}</li>}
+        </ul>
+      </div>
+    </div>
+
+    <div class="ftr__bottom">
+      <Logo />
+      <p class="mono">© {new Date().getFullYear()} {site.nombre}</p>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .ftr {
+    padding-top: var(--s-4);
+    padding-bottom: 2rem;
+  }
+  .ftr__top {
+    row-gap: 3rem;
+    padding-bottom: var(--s-3);
+  }
+  .ftr__claim {
+    grid-column: 1 / span 6;
+    display: grid;
+    gap: 2rem;
+    justify-items: start;
+  }
+  .ftr__claim p {
+    font-size: var(--t-xl);
+    line-height: 1.05;
+  }
+  .ftr__col {
+    grid-column: span 3;
+  }
+  .ftr__col:first-of-type {
+    grid-column: 8 / span 2;
+  }
+  .ftr__col:last-child {
+    grid-column: 10 / span 3;
+  }
+  .ftr__h {
+    color: #93a0c4;
+    margin-bottom: 1rem;
+  }
+  .ftr ul {
+    list-style: none;
+    display: grid;
+    gap: 0.15rem;
+  }
+  .ftr ul a {
+    display: inline-block;
+    padding-block: 0.35rem;
+    text-decoration: none;
+    font-size: var(--t-sm);
+  }
+  .ftr ul a:hover {
+    color: var(--accent-on-ink);
+  }
+  .ftr__pending,
+  .ftr__muted {
+    font-size: var(--t-sm);
+    color: #93a0c4;
+    padding-block: 0.35rem;
+  }
+  .ftr__bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding-top: 1.5rem;
+    border-top: 1px solid #26386e;
+    color: #aab6d6;
+  }
+  .ftr__bottom :global(.logo__sub) {
+    color: #93a0c4;
+    border-color: #26386e;
+  }
+  @media (max-width: 860px) {
+    .ftr__claim,
+    .ftr__col,
+    .ftr__col:first-of-type,
+    .ftr__col:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

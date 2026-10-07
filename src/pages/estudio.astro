@@ -1,0 +1,257 @@
+---
+import Base from '../layouts/Base.astro';
+import TrazoObra from '../components/TrazoObra.astro';
+import { site } from '../config/site';
+import { getEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import mesa from '../assets/estudio/mesa.jpg';
+import { equipo, trayectoria } from '../lib/contenido';
+
+const patio = await getEntry('proyectos', 'demo-vivienda-patio');
+
+const principios = [
+  { t: 'Luz', p: 'Orientamos cada espacio para que la luz natural haga buena parte del trabajo: define el ambiente, el confort y el carácter del lugar.' },
+  { t: 'Proporción', p: 'Las dimensiones correctas hacen que un espacio se sienta amplio, íntimo o tranquilo. Las cuidamos tanto como la imagen.' },
+  { t: 'Materia', p: 'Preferimos pocos materiales, bien elegidos y bien ejecutados, que envejezcan con dignidad.' },
+  { t: 'Rigor', p: 'Presupuestos claros, documentación completa y seguimiento constante. La calidad de una obra también se construye en la gestión.' },
+];
+---
+<Base title="Estudio" description="ALVRA STUDIO: filosofía, enfoque y la relación entre diseño y construcción.">
+  <section class="section">
+    <div class="wrap">
+      <header class="e-head grid">
+        <p class="eyebrow e-head__eb">Estudio</p>
+        <h1 class="display e-head__title">Pensamos como arquitectos. <em class="acc">Respondemos como constructores.</em></h1>
+      </header>
+
+      <div class="e-intro grid">
+        <div class="e-intro__text prose">
+          <p class="lead">
+            ALVRA STUDIO es un estudio de arquitectura y construcción. Creemos que un buen proyecto no termina en el plano: se demuestra en la obra.
+          </p>
+          <p>
+            Por eso trabajamos con un mismo equipo durante todo el proceso. Las decisiones de diseño se toman sabiendo cómo se construirán, y las decisiones de obra se toman sin perder de vista por qué se diseñó así.
+          </p>
+          <p>
+            Nos interesa una arquitectura serena y duradera, hecha para quienes la van a habitar, con respuestas concretas al lugar, al presupuesto y al tiempo de cada cliente.
+          </p>
+        </div>
+        <div class="e-intro__visual">
+          <TrazoObra dibujo="patio" titulo="Del trazo a la obra" portada={patio?.data.portada} portadaAlt={patio?.data.portadaAlt} trazo={patio?.data.trazo} etiquetas={['Diseño', 'Construcción']} inicial={50} aviso={site.mostrarAvisosDemo ? 'Imagen generada con IA · demo' : undefined} />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <figure class="e-fig">
+    <Image src={mesa} alt="Mesa de trabajo con planos, una maqueta y muestras de materiales (imagen ilustrativa generada con IA)" widths={[800, 1400, 2200]} sizes="100vw" />
+    {site.mostrarAvisosDemo && <figcaption class="wrap mono muted">Imagen ilustrativa generada con IA · sustituir por fotografía real del estudio</figcaption>}
+  </figure>
+
+  <section class="section on-ink" aria-labelledby="pr-t">
+    <div class="wrap">
+      <header class="sec-head">
+        <span class="sec-head__num">Enfoque</span>
+        <h2 id="pr-t" class="sec-head__title">Cuatro principios</h2>
+      </header>
+      <ol class="pr grid">
+        {principios.map((x, i) => (
+          <li data-reveal>
+            <span class="mono pr__n">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="display pr__t">{x.t}</h3>
+            <p>{x.p}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  {(equipo.length > 0 || trayectoria.length > 0) && (
+    <section class="section" aria-labelledby="eq-t">
+      <div class="wrap">
+        {equipo.length > 0 && (
+          <>
+            <header class="sec-head">
+              <span class="sec-head__num">Personas</span>
+              <h2 id="eq-t" class="sec-head__title">Equipo</h2>
+            </header>
+            <ul class="eq grid">
+              {equipo.map((m) => (
+                <li>
+                  {m.foto && <Image class="eq__img" src={m.foto} alt={`Retrato de ${m.nombre}`} widths={[400, 800]} sizes="(min-width: 900px) 33vw, 100vw" />}
+                  <p class="eq__name">{m.nombre}</p>
+                  <p class="mono muted">{m.rol}</p>
+                  {m.bio && <p class="muted">{m.bio}</p>}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        {trayectoria.length > 0 && (
+          <div class="exp grid">
+            <h3 id={equipo.length ? undefined : 'eq-t'} class="display exp__t">Trayectoria</h3>
+            <ul class="exp__list">
+              {trayectoria.map((t) => (
+                <li><span class="display">{t.dato}</span><span class="muted">{t.texto}</span></li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    </section>
+  )}
+
+  <section class="cta-e" aria-label="Contacto">
+    <div class="wrap cta-e__in">
+      <p class="display">Hablemos de tu proyecto.</p>
+      <a class="btn btn--accent" href="/contacto/">Cuéntanos tu proyecto <span class="arrow" aria-hidden="true">→</span></a>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .e-head {
+    padding-bottom: var(--s-3);
+    row-gap: 1.5rem;
+  }
+  .e-head__eb {
+    grid-column: 1 / -1;
+  }
+  .e-head__title {
+    grid-column: 1 / span 10;
+    font-size: var(--t-2xl);
+    line-height: 0.96;
+  }
+  .e-head__title em {
+    display: block;
+  }
+  .e-intro {
+    row-gap: 3rem;
+    align-items: start;
+  }
+  .e-intro__text {
+    grid-column: 1 / span 5;
+  }
+  .e-intro__visual {
+    grid-column: 7 / span 6;
+  }
+  .e-fig {
+    margin: 0;
+  }
+  .e-fig :global(img) {
+    width: 100%;
+    height: clamp(320px, 62vh, 720px);
+    object-fit: cover;
+  }
+  .e-fig figcaption {
+    padding-block: 0.75rem;
+  }
+  .pr {
+    list-style: none;
+    row-gap: 3rem;
+  }
+  .pr li {
+    grid-column: span 3;
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+    border-top: 1px solid #26386e;
+    padding-top: 1.25rem;
+  }
+  .pr__n {
+    color: var(--accent-on-ink);
+  }
+  .pr__t {
+    font-size: var(--t-xl);
+  }
+  .pr p {
+    color: #d3daec;
+  }
+  .eq__note {
+    margin-bottom: var(--s-3);
+  }
+  .eq {
+    list-style: none;
+    row-gap: 2.5rem;
+  }
+  .eq li {
+    grid-column: span 4;
+    display: grid;
+    gap: 0.4rem;
+  }
+  .eq li :global(.eq__img) {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    margin-bottom: 0.6rem;
+  }
+  .exp__list {
+    grid-column: 5 / span 8;
+    list-style: none;
+    display: grid;
+    gap: 1rem;
+  }
+  .exp__list li {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .exp__list .display {
+    font-size: 2rem;
+    line-height: 1;
+    color: var(--accent);
+  }
+  .cta-e {
+    padding-block: var(--s-4);
+    background: var(--paper-2);
+  }
+  .cta-e__in {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+  .cta-e p {
+    font-size: var(--t-2xl);
+    line-height: 1;
+  }
+  .eq__name {
+    font-family: var(--f-display);
+    font-size: 1.6rem;
+  }
+  .exp {
+    margin-top: var(--s-4);
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--ink);
+    row-gap: 1.5rem;
+  }
+  .exp__t {
+    grid-column: 1 / span 4;
+    font-size: var(--t-xl);
+  }
+
+  @media (max-width: 900px) {
+    .e-head__title,
+    .e-intro__text,
+    .e-intro__visual,
+    .exp__t,
+    .exp__list {
+      grid-column: 1 / -1;
+    }
+    .pr li {
+      grid-column: span 6;
+    }
+    .eq li {
+      grid-column: span 6;
+    }
+  }
+  @media (max-width: 600px) {
+    .pr li,
+    .eq li {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

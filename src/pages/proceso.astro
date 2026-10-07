@@ -1,0 +1,204 @@
+---
+import Base from '../layouts/Base.astro';
+import { proceso } from '../lib/contenido';
+
+const faq = [
+  {
+    q: '¿Necesito tener terreno para empezar?',
+    a: 'No. Podemos acompañarte desde antes, ayudándote a entender qué puedes hacer en un terreno que estás valorando.',
+  },
+  {
+    q: '¿Puedo contratar solo el diseño o solo la construcción?',
+    a: 'Sí. Aunque la mayor ventaja aparece cuando hacemos ambas cosas, puedes contratar cada etapa por separado.',
+  },
+  {
+    q: '¿Cuándo conoceré el costo de la obra?',
+    a: 'Desde la primera conversación hablamos de tu presupuesto. El costo de obra detallado se prepara con el proyecto ejecutivo, cuando todo está definido.',
+  },
+];
+---
+<Base title="Proceso" description="Cómo trabajamos en ALVRA STUDIO: de la primera conversación a la entrega de la obra, paso a paso.">
+  <section class="section">
+    <div class="wrap">
+      <header class="p-head grid">
+        <p class="eyebrow p-head__eb">Proceso</p>
+        <h1 class="display p-head__title">Sabrás en todo momento <em class="acc">en qué punto está tu proyecto.</em></h1>
+        <p class="lead muted p-head__lead">
+          Seis etapas claras, con un resultado concreto al final de cada una. Avanzamos a la siguiente solo cuando estás de acuerdo.
+        </p>
+      </header>
+
+
+      <ol class="steps">
+        {proceso.map((s, i) => (
+          <li class="step grid" data-reveal>
+            <span class="step__n display" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <div class="step__main">
+              <h2 class="display step__t"><span class="sr-only">Etapa {i + 1}: </span>{s.titulo}</h2>
+              <p class="step__c">{s.corto}</p>
+            </div>
+            <div class="step__side">
+              <p>{s.texto}</p>
+              <p class="step__e"><span class="mono">Resultado</span> {s.entregable}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <section class="section on-ink" aria-labelledby="faq-t">
+    <div class="wrap grid faq-grid">
+      <h2 id="faq-t" class="display faq__t">Preguntas frecuentes</h2>
+      <div class="faq">
+        {faq.map((f) => (
+          <details>
+            <summary>{f.q}</summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+        <a class="btn btn--accent faq__cta" href="/contacto/">Empezar con una conversación <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .p-head {
+    row-gap: 1.5rem;
+    padding-bottom: var(--s-3);
+  }
+  .p-head__eb {
+    grid-column: 1 / -1;
+  }
+  .p-head__title {
+    grid-column: 1 / span 8;
+    font-size: var(--t-2xl);
+    line-height: 0.96;
+  }
+  .p-head__lead {
+    grid-column: 9 / span 4;
+    align-self: end;
+    font-size: var(--t-md);
+  }
+  .p-note {
+    margin-bottom: var(--s-3);
+  }
+  .steps {
+    list-style: none;
+    position: relative;
+  }
+  .step {
+    position: relative;
+    row-gap: 1rem;
+    padding-block: var(--s-3);
+    border-top: 1px solid var(--line);
+  }
+  .step::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    background: var(--accent);
+    transform: rotate(45deg);
+  }
+  .step__n {
+    grid-column: 1 / span 2;
+    font-size: var(--t-2xl);
+    line-height: 0.85;
+    color: var(--paper-3);
+    -webkit-text-stroke: 1px var(--ink);
+  }
+  .step__main {
+    grid-column: 3 / span 4;
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+  }
+  .step__t {
+    font-size: var(--t-xl);
+  }
+  .step__c {
+    color: var(--graphite);
+  }
+  .step__side {
+    grid-column: 8 / span 5;
+    display: grid;
+    gap: 1rem;
+  }
+  .step__e {
+    padding-top: 0.9rem;
+    border-top: 1px dashed var(--line);
+  }
+  .step__e .mono {
+    color: var(--accent);
+    margin-right: 0.5rem;
+  }
+  @media (max-width: 900px) {
+    .p-head__title,
+    .p-head__lead {
+      grid-column: 1 / -1;
+    }
+    .step__n {
+      grid-column: 1 / -1;
+      font-size: 3rem;
+    }
+    .step__main,
+    .step__side {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .faq-grid {
+    row-gap: 2rem;
+  }
+  .faq__t {
+    grid-column: 1 / span 5;
+    font-size: var(--t-xl);
+  }
+  .faq {
+    grid-column: 7 / span 6;
+  }
+  .faq details {
+    border-top: 1px solid #26386e;
+  }
+  .faq details:last-of-type {
+    border-bottom: 1px solid #26386e;
+  }
+  .faq summary {
+    cursor: pointer;
+    list-style: none;
+    padding-block: 1.1rem;
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: var(--t-lg);
+  }
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq summary::after {
+    content: '+';
+    font-family: var(--f-mono);
+    color: var(--accent-on-ink);
+  }
+  .faq details[open] summary::after {
+    content: '−';
+  }
+  .faq details p {
+    padding-bottom: 1.25rem;
+    color: #d3daec;
+    max-width: 52ch;
+  }
+  .faq__cta {
+    margin-top: 2rem;
+  }
+  @media (max-width: 900px) {
+    .faq__t,
+    .faq {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

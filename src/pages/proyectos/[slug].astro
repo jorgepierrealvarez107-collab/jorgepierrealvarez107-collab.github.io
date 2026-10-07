@@ -1,0 +1,320 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import TrazoObra from '../../components/TrazoObra.astro';
+import { estados, site } from '../../config/site';
+
+export async function getStaticPaths() {
+  const ps = (await getCollection('proyectos')).sort((a, b) => a.data.orden - b.data.orden);
+  return ps.map((p, i) => ({
+    params: { slug: p.id },
+    props: { p, prev: ps[i - 1] ?? ps[ps.length - 1], next: ps[i + 1] ?? ps[0] },
+  }));
+}
+
+interface Props {
+  p: CollectionEntry<'proyectos'>;
+  prev: CollectionEntry<'proyectos'>;
+  next: CollectionEntry<'proyectos'>;
+}
+
+const { p, prev, next } = Astro.props;
+const d = p.data;
+const { Content } = await render(p);
+const est = estados[d.estado];
+const etiquetas: [string, string] =
+  d.estado === 'conceptual' ? ['Trazo', 'Concepto'] : d.estado === 'en-obra' ? ['Trazo', 'Avance'] : ['Trazo', 'Obra'];
+
+const ficha = [
+  { k: 'Estado', v: est.label },
+  { k: 'Tipo', v: d.tipo },
+  { k: 'Alcance', v: d.alcance.join(' + ') },
+  { k: 'Ubicación', v: d.ubicacion },
+  { k: 'Superficie', v: d.superficie },
+  { k: 'Año', v: d.anio },
+].filter((f) => f.v);
+---
+<Base title={d.titulo} description={d.resumen}>
+  <article>
+    <header class="pj-head wrap">
+      <nav class="mono crumbs" aria-label="Ruta de navegación">
+        <a href="/proyectos/">Proyectos</a> <span aria-hidden="true">/</span> <span aria-current="page">{d.titulo}</span>
+      </nav>
+      <div class="pj-head__grid grid">
+        <h1 class="display pj-head__title">{d.titulo}</h1>
+        <div class="pj-head__tags">
+          <span class:list={['tag', `tag--${d.estado}`]}>{est.label}</span>
+          {d.demo && site.mostrarAvisosDemo && <span class="tag tag--demo">Proyecto de demostración</span>}
+        </div>
+        <p class="lead pj-head__lead">{d.resumen}</p>
+      </div>
+    </header>
+
+    <div class="wrap pj-visual">
+      <TrazoObra dibujo={d.dibujo} titulo={d.titulo} portada={d.portada} portadaAlt={d.portadaAlt} trazo={d.trazo} etiquetas={etiquetas} prioridad demo={d.demo} aviso={d.imagenesIA && site.mostrarAvisosDemo ? 'Imagen generada con IA · demo' : undefined} rotulo={`${d.tipo} · alzado`} />
+    </div>
+
+    <div class="wrap section pj-body grid">
+      <aside class="pj-ficha" aria-label="Ficha del proyecto">
+        <dl>
+          {ficha.map((f) => (
+            <div>
+              <dt class="mono">{f.k}</dt>
+              <dd>{f.v}</dd>
+            </div>
+          ))}
+        </dl>
+      </aside>
+      <div class="pj-text">
+        <h2 class="mono muted pj-label">Concepto</h2>
+        <div class="prose pj-prose"><Content /></div>
+      </div>
+    </div>
+
+    {d.decisiones.length > 0 && (
+      <section class="pj-dec on-ink section" aria-labelledby="dec-title">
+        <div class="wrap">
+          <header class="sec-head">
+            <span class="sec-head__num">Decisiones</span>
+            <h2 id="dec-title" class="sec-head__title">Por qué es así</h2>
+          </header>
+          <ol class="dec grid">
+            {d.decisiones.map((x, i) => (
+              <li data-reveal>
+                <span class="mono dec__n">{String(i + 1).padStart(2, '0')}</span>
+                <h3 class="display dec__t">{x.titulo}</h3>
+                <p>{x.texto}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+    )}
+
+    {(d.galeria.length > 0 || d.portada) && <section class="wrap section" aria-labelledby="gal-title">
+      <h2 id="gal-title" class="mono muted pj-label">Galería</h2>
+      {d.galeria.length > 0 ? (
+        <div class="gal grid">
+          {d.galeria.map((g, i) => (
+            <figure class:list={['gal__item', i % 3 === 0 && 'gal__item--wide']}>
+              <Image src={g.src} alt={g.alt} widths={[640, 1000, 1600]} sizes="(min-width: 900px) 66vw, 100vw" />
+              {g.pie && <figcaption class="mono muted">{g.pie}</figcaption>}
+            </figure>
+          ))}
+        </div>
+      ) : d.portada ? (
+        <div class="gal grid">
+          <figure class="gal__item gal__item--wide">
+            <Image src={d.portada} alt={d.portadaAlt || d.titulo} widths={[800, 1400, 2200]} sizes="100vw" />
+            <figcaption class="mono muted">{d.imagenesIA ? 'Imagen generada con IA · demostración, no es obra real' : 'Vista principal'}</figcaption>
+          </figure>
+          {d.trazo && (
+            <figure class="gal__item">
+              <Image src={d.trazo} alt={`Dibujo de líneas de ${d.titulo}`} widths={[640, 1000, 1600]} sizes="(min-width: 700px) 50vw, 100vw" />
+              <figcaption class="mono muted">Trazo · alzado{d.imagenesIA ? ' (generado con IA)' : ''}</figcaption>
+            </figure>
+          )}
+        </div>
+      ) : null}
+    </section>}
+
+    <nav class="wrap pj-nav" aria-label="Otros proyectos">
+      <a href={`/proyectos/${prev.id}/`} class="pj-nav__a">
+        <span class="mono muted">← Anterior</span>
+        <span class="display">{prev.data.titulo}</span>
+      </a>
+      <a href={`/proyectos/${next.id}/`} class="pj-nav__a pj-nav__a--next">
+        <span class="mono muted">Siguiente →</span>
+        <span class="display">{next.data.titulo}</span>
+      </a>
+    </nav>
+
+    <section class="wrap pj-cta" aria-label="Contacto">
+      <p class="display">¿Tienes un proyecto con una necesidad parecida?</p>
+      <a class="btn btn--accent" href="/contacto/">Cuéntanos tu proyecto <span class="arrow" aria-hidden="true">→</span></a>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .pj-head {
+    padding-top: clamp(1.5rem, 4vw, 3rem);
+    padding-bottom: var(--s-3);
+  }
+  .crumbs {
+    color: var(--graphite);
+    margin-bottom: 2rem;
+  }
+  .crumbs a {
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--accent);
+  }
+  .pj-head__grid {
+    row-gap: 1.25rem;
+    align-items: end;
+  }
+  .pj-head__title {
+    grid-column: 1 / span 8;
+    font-size: var(--t-3xl);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+  }
+  .pj-head__tags {
+    grid-column: 9 / span 4;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-self: start;
+    padding-top: 1rem;
+  }
+  .pj-head__tags .tag--demo::before {
+    display: none;
+  }
+  .pj-head__lead {
+    grid-column: 1 / span 7;
+  }
+  @media (max-width: 900px) {
+    .pj-head__title,
+    .pj-head__tags,
+    .pj-head__lead {
+      grid-column: 1 / -1;
+      justify-content: flex-start;
+    }
+    .pj-head__tags {
+      padding-top: 0;
+    }
+  }
+
+  .pj-body {
+    row-gap: 2.5rem;
+  }
+  .pj-ficha {
+    grid-column: 1 / span 4;
+  }
+  .pj-ficha dl {
+    margin: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .pj-ficha dl > div {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    gap: 1rem;
+    padding-block: 0.85rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .pj-ficha dt {
+    color: var(--graphite);
+    padding-top: 0.2rem;
+  }
+  .pj-ficha dd {
+    margin: 0;
+  }
+  .pj-text {
+    grid-column: 6 / span 7;
+  }
+  .pj-label {
+    margin-bottom: 1.5rem;
+    font-weight: 400;
+  }
+  .pj-prose {
+    font-size: var(--t-lg);
+    line-height: 1.5;
+  }
+  .pj-prose :global(blockquote) {
+    font-size: var(--t-sm);
+    line-height: 1.5;
+  }
+  @media (max-width: 900px) {
+    .pj-ficha,
+    .pj-text {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .dec {
+    list-style: none;
+    row-gap: 3rem;
+  }
+  .dec li {
+    grid-column: span 4;
+    display: grid;
+    gap: 0.9rem;
+    align-content: start;
+    border-top: 1px solid #26386e;
+    padding-top: 1.25rem;
+  }
+  .dec__n {
+    color: var(--accent-on-ink);
+  }
+  .dec__t {
+    font-size: 1.9rem;
+    line-height: 1.05;
+  }
+  .dec p {
+    color: #d3daec;
+  }
+  @media (max-width: 900px) {
+    .dec li {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .gal {
+    row-gap: var(--col-gap);
+  }
+  .gal__item {
+    grid-column: span 6;
+    margin: 0;
+  }
+  .gal__item--wide {
+    grid-column: 1 / -1;
+  }
+  .gal figcaption {
+    margin-top: 0.6rem;
+  }
+  @media (max-width: 700px) {
+    .gal__item {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .pj-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-top: 1px solid var(--ink);
+  }
+  .pj-nav__a {
+    display: grid;
+    gap: 0.5rem;
+    padding-block: 1.75rem;
+    text-decoration: none;
+  }
+  .pj-nav__a .display {
+    font-size: var(--t-lg);
+  }
+  .pj-nav__a:hover .display {
+    color: var(--accent);
+  }
+  .pj-nav__a--next {
+    text-align: right;
+    border-left: 1px solid var(--line);
+  }
+  .pj-cta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding-block: var(--s-3) var(--s-4);
+    border-top: 1px solid var(--line);
+  }
+  .pj-cta p {
+    font-size: var(--t-xl);
+    max-width: 22ch;
+    line-height: 1.05;
+  }
+</style>

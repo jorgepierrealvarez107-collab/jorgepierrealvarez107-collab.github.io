@@ -1,0 +1,164 @@
+---
+/**
+ * Interacción principal: "Del trazo a la obra".
+ * Superpone el dibujo (trazo) y el resultado (obra) y permite recorrer la
+ * transición con un control deslizante nativo (teclado, táctil, ratón).
+ *
+ * Sin JavaScript: se muestran ambas capas divididas al 50 %.
+ * Con reduced-motion: no hay animación de entrada.
+ */
+import { Image } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import Lamina from './Lamina.astro';
+import type { dibujos } from '../lib/dibujos';
+
+interface Props {
+  dibujo: keyof typeof dibujos;
+  titulo: string;
+  portada?: ImageMetadata;
+  portadaAlt?: string;
+  trazo?: ImageMetadata;
+  etiquetas?: [string, string];
+  inicial?: number;
+  prioridad?: boolean;
+  demo?: boolean;
+  /** Etiqueta visible sobre la imagen (p. ej. "Imagen generada con IA · demo"). */
+  aviso?: string;
+  /** Rótulo técnico de la lámina (p. ej. "Alzado principal"). */
+  rotulo?: string;
+  class?: string;
+}
+
+const {
+  dibujo,
+  titulo,
+  portada,
+  portadaAlt = '',
+  trazo,
+  etiquetas = ['Trazo', 'Obra'],
+  inicial = 55,
+  prioridad = false,
+  demo = true,
+  aviso,
+  rotulo,
+  class: cls = '',
+} = Astro.props;
+
+const id = `to-${Math.random().toString(36).slice(2, 8)}`;
+const sizes = '(min-width: 1100px) 60vw, 100vw';
+---
+<figure class:list={['to', cls]} data-to data-inicial={inicial} style={`--pos:${inicial}%`}>
+  <div class="to__stage" data-to-stage>
+    <div class="to__layer to__trazo">
+      {trazo ? (
+        <Image src={trazo} alt={`Dibujo de concepto: ${titulo}`} widths={[640, 1000, 1600]} sizes={sizes} loading={prioridad ? 'eager' : 'lazy'} />
+      ) : (
+        <Lamina dibujo={dibujo} modo="trazo" />
+      )}
+    </div>
+    <div class="to__layer to__obra" data-to-obra>
+      {portada ? (
+        <Image src={portada} alt={portadaAlt || titulo} widths={[640, 1000, 1600, 2200]} sizes={sizes} loading={prioridad ? 'eager' : 'lazy'} fetchpriority={prioridad ? 'high' : 'auto'} />
+      ) : (
+        <Lamina dibujo={dibujo} modo="obra" rotulo={demo ? 'Imagen de demostración' : 'Imagen pendiente'} />
+      )}
+    </div>
+    <div class="to__handle" aria-hidden="true"><span></span></div>
+    <div class="to__marks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    <span class="to__tag to__tag--l mono" aria-hidden="true">{etiquetas[1]}</span>
+    <span class="to__tag to__tag--r mono" aria-hidden="true">{etiquetas[0]}</span>
+    {rotulo && <span class="to__rotulo mono" aria-hidden="true">{rotulo}</span>}
+    {aviso && <span class="to__aviso mono">{aviso}</span>}
+  </div>
+
+  <div class="to__controls">
+    <span class="to__label" aria-hidden="true">{etiquetas[0]}</span>
+    <label class="sr-only" for={id}>Comparar {etiquetas[0].toLowerCase()} y {etiquetas[1].toLowerCase()} de {titulo}</label>
+    <input
+      id={id}
+      class="to__range"
+      type="range"
+      min="0"
+      max="100"
+      step="1"
+      value={inicial}
+      aria-valuetext={`${inicial} % ${etiquetas[1].toLowerCase()} visible`}
+      data-to-range
+    />
+    <span class="to__label" aria-hidden="true">{etiquetas[1]}</span>
+  </div>
+</figure>
+
+<script>
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function init(fig: HTMLElement) {
+    const stage = fig.querySelector<HTMLElement>('[data-to-stage]')!;
+    const range = fig.querySelector<HTMLInputElement>('[data-to-range]')!;
+    const label = (fig.querySelector('.to__label:last-of-type')?.textContent || 'obra').toLowerCase();
+    const inicial = Number(fig.dataset.inicial || 55);
+    let tocado = false;
+
+    const set = (v: number) => {
+      const p = Math.max(0, Math.min(100, Math.round(v)));
+      fig.style.setProperty('--pos', `${p}%`);
+      range.value = String(p);
+      range.setAttribute('aria-valuetext', `${p} % ${label} visible`);
+    };
+
+    range.addEventListener('input', () => {
+      tocado = true;
+      set(Number(range.value));
+    });
+
+    // Arrastre directo sobre la imagen. touch-action: pan-y conserva el scroll vertical.
+    let activo = false;
+    const desde = (e: PointerEvent) => {
+      const r = stage.getBoundingClientRect();
+      set(((e.clientX - r.left) / r.width) * 100);
+    };
+    stage.addEventListener('pointerdown', (e) => {
+      activo = true;
+      tocado = true;
+      fig.classList.add('is-dragging');
+      stage.setPointerCapture(e.pointerId);
+      desde(e);
+    });
+    stage.addEventListener('pointermove', (e) => activo && desde(e));
+    const fin = () => {
+      activo = false;
+      fig.classList.remove('is-dragging');
+    };
+    stage.addEventListener('pointerup', fin);
+    stage.addEventListener('pointercancel', fin);
+
+    if (reduce) {
+      fig.classList.add('is-drawn');
+      return;
+    }
+
+    // Entrada: se dibujan las líneas y después se revela la obra.
+    set(0);
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((en) => en.isIntersecting)) return;
+        io.disconnect();
+        fig.classList.add('is-drawn');
+        const t0 = performance.now() + 1100;
+        const dur = 1300;
+        const step = (t: number) => {
+          if (tocado) return;
+          const k = Math.min(1, Math.max(0, (t - t0) / dur));
+          const e = 1 - Math.pow(1 - k, 3);
+          set(e * inicial);
+          if (k < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      },
+      { threshold: 0.35 }
+    );
+    io.observe(fig);
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-to]').forEach(init);
+</script>

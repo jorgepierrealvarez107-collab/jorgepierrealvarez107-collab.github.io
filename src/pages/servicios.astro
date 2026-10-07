@@ -1,0 +1,229 @@
+---
+import Base from '../layouts/Base.astro';
+import { serviciosPrincipales, serviciosComplementarios } from '../lib/contenido';
+---
+<Base title="Servicios" description="Arquitectura y construcción con un mismo equipo: del análisis del sitio y el proyecto ejecutivo a la obra terminada.">
+  <section class="section">
+    <div class="wrap">
+      <header class="s-head grid">
+        <p class="eyebrow s-head__eb">Servicios</p>
+        <h1 class="display s-head__title">Un solo equipo, <em class="acc">del plano a la obra.</em></h1>
+        <p class="lead s-head__lead muted">
+          Puedes contratarnos para diseñar tu proyecto, para construirlo, o para ambas cosas. La mayor ventaja aparece cuando hacemos las dos.
+        </p>
+      </header>
+
+      {serviciosPrincipales.map((s, i) => (
+        <section class="svc grid" id={s.id} aria-labelledby={`${s.id}-t`}>
+          <p class="svc__n mono">0{i + 1}</p>
+          <div class="svc__main">
+            <h2 id={`${s.id}-t`} class="display svc__title">{s.titulo}</h2>
+            <p class="svc__intro">{s.intro}</p>
+          </div>
+          <div class="svc__side">
+            <h3 class="mono muted">Qué incluye</h3>
+            <ul class="svc__list">
+              {s.incluye.map((x) => <li>{x}</li>)}
+            </ul>
+            <div class="svc__valor">
+              <h3 class="mono">Qué ganas</h3>
+              <p>{s.valor}</p>
+            </div>
+          </div>
+        </section>
+      ))}
+    </div>
+  </section>
+
+  <section class="section on-ink both" aria-labelledby="both-t">
+    <div class="wrap grid">
+      <h2 id="both-t" class="display both__title">Cuando diseñamos y construimos, <span class="acc">el proyecto no cambia de manos.</span></h2>
+      <ul class="both__list">
+        <li><span class="mono">A</span><p><strong>Menos sorpresas.</strong> El proyecto se dibuja pensando en cómo se va a construir.</p></li>
+        <li><span class="mono">B</span><p><strong>Un solo interlocutor.</strong> Sabes a quién preguntar en cada etapa.</p></li>
+        <li><span class="mono">C</span><p><strong>Decisiones coherentes.</strong> Los ajustes en obra respetan la intención del diseño.</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="prop-t">
+    <div class="wrap">
+      {serviciosComplementarios.length > 0 && (
+        <>
+          <header class="sec-head">
+            <span class="sec-head__num">Otros servicios</span>
+            <h2 id="prop-t" class="sec-head__title">Servicios complementarios</h2>
+          </header>
+          <ul class="prop grid">
+            {serviciosComplementarios.map((s) => (
+              <li>
+                <h3 class="display">{s.titulo}</h3>
+                <p class="muted">{s.texto}</p>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <div class="s-cta">
+        <p id={serviciosComplementarios.length ? undefined : 'prop-t'} class="lead">¿No sabes qué servicio necesitas? Cuéntanos tu situación y te orientamos.</p>
+        <a class="btn btn--accent" href="/contacto/">Cuéntanos tu proyecto <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .s-head {
+    row-gap: 1.5rem;
+    padding-bottom: var(--s-4);
+  }
+  .s-head__eb {
+    grid-column: 1 / -1;
+  }
+  .s-head__title {
+    grid-column: 1 / span 8;
+    font-size: var(--t-2xl);
+    line-height: 0.96;
+  }
+  .s-head__lead {
+    grid-column: 9 / span 4;
+    align-self: end;
+    font-size: var(--t-md);
+  }
+  .svc {
+    row-gap: 2rem;
+    padding-block: var(--s-3);
+    border-top: 1px solid var(--ink);
+  }
+  .svc__n {
+    grid-column: 1 / span 1;
+    color: var(--accent);
+    padding-top: 1rem;
+  }
+  .svc__main {
+    grid-column: 2 / span 6;
+    display: grid;
+    gap: 1.25rem;
+    align-content: start;
+  }
+  .svc__title {
+    font-size: var(--t-3xl);
+    line-height: 0.9;
+  }
+  .svc__intro {
+    font-size: var(--t-lg);
+    max-width: 30ch;
+  }
+  .svc__side {
+    grid-column: 8 / span 5;
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+    padding-top: 1rem;
+  }
+  .svc__list {
+    list-style: none;
+  }
+  .svc__list li {
+    padding-block: 0.75rem;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1.5rem 1fr;
+  }
+  .svc__list li::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    margin-top: 0.6rem;
+    border: 1px solid var(--ink);
+    transform: rotate(45deg);
+  }
+  .svc__valor {
+    margin-top: 1rem;
+    padding: 1.25rem;
+    background: var(--paper-2);
+    display: grid;
+    gap: 0.5rem;
+  }
+  .svc__valor .mono {
+    color: var(--accent);
+  }
+  .both .grid {
+    row-gap: 2.5rem;
+  }
+  .both__title {
+    grid-column: 1 / span 6;
+    font-size: var(--t-xl);
+    line-height: 1.06;
+  }
+  .both__list {
+    grid-column: 8 / span 5;
+    list-style: none;
+    display: grid;
+    gap: 0;
+  }
+  .both__list li {
+    display: grid;
+    grid-template-columns: 2.5rem 1fr;
+    padding-block: 1.1rem;
+    border-top: 1px solid #26386e;
+    color: #d3daec;
+  }
+  .both__list .mono {
+    color: var(--accent-on-ink);
+    padding-top: 0.25rem;
+  }
+  .both__list strong {
+    color: var(--paper);
+    font-weight: 500;
+  }
+  .prop__note {
+    margin-bottom: var(--s-3);
+  }
+  .prop {
+    list-style: none;
+    row-gap: 2rem;
+  }
+  .prop li {
+    grid-column: span 4;
+    display: grid;
+    gap: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed var(--line);
+  }
+  .prop h3 {
+    font-size: 1.6rem;
+  }
+  .s-cta {
+    margin-top: var(--s-2);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding-top: var(--s-3);
+    border-top: 1px solid var(--ink);
+  }
+  @media (max-width: 900px) {
+    .s-head__title,
+    .s-head__lead,
+    .svc__n,
+    .svc__main,
+    .svc__side,
+    .both__title,
+    .both__list {
+      grid-column: 1 / -1;
+    }
+    .svc__n {
+      padding-top: 0;
+    }
+    .prop li {
+      grid-column: span 6;
+    }
+  }
+  @media (max-width: 600px) {
+    .prop li {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

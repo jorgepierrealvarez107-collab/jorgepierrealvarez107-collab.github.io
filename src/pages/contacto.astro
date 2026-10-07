@@ -1,0 +1,651 @@
+---
+import Base from '../layouts/Base.astro';
+import { site, whatsappUrl } from '../config/site';
+
+const endpoint = import.meta.env.PUBLIC_CONTACT_ENDPOINT || '';
+const { email, zonaServicio } = site.contacto;
+const wa = whatsappUrl('Hola, me gustaría hablar sobre un proyecto.');
+
+const tipos = ['Vivienda nueva', 'Remodelación o ampliación', 'Comercial u oficinas', 'Otro'];
+const servicios = ['Diseño arquitectónico', 'Construcción', 'Diseño y construcción', 'Aún no lo sé'];
+const situaciones = ['Tengo terreno o espacio', 'Estoy buscando terreno', 'Ya tengo planos o un proyecto', 'Solo es una idea por ahora'];
+const plazos = ['Lo antes posible', 'En los próximos 6 meses', 'Más adelante / sin fecha'];
+const prefs = ['Correo', 'Teléfono', 'WhatsApp'];
+---
+<Base title="Contacto" description="Cuéntanos tu proyecto. Un breve cuestionario para entender qué necesitas y responderte con los siguientes pasos.">
+  <section class="section c">
+    <div class="wrap grid c__grid">
+      <header class="c__head">
+        <p class="eyebrow">Contacto</p>
+        <h1 class="display c__title">Cuéntanos <em class="acc">tu proyecto.</em></h1>
+        <p class="lead muted">
+          Tres pasos breves, unos 3 minutos. Con esta información podremos responderte con algo útil desde el primer contacto.
+        </p>
+
+        <div class="c__alt">
+          <p class="mono muted">¿Prefieres escribirnos directamente?</p>
+          {(email || wa) ? (
+            <ul>
+              {email && <li><a class="link" href={`mailto:${email}`}>{email}</a></li>}
+              {wa && <li><a class="link" href={wa} target="_blank" rel="noopener">WhatsApp<span class="sr-only"> (abre en una pestaña nueva)</span> →</a></li>}
+            </ul>
+          ) : (
+            <p class="muted">Muy pronto publicaremos aquí nuestro WhatsApp y correo.</p>
+          )}
+          {zonaServicio && <p class="muted c__zona">Zona de trabajo: {zonaServicio}</p>}
+        </div>
+      </header>
+
+      <div class="c__form-col">
+        <form class="qf" method="post" action={endpoint || undefined} novalidate data-form data-endpoint={endpoint} aria-describedby="qf-intro">
+          <p id="qf-intro" class="sr-only">Formulario en tres pasos. Los campos marcados como obligatorios son necesarios para enviar.</p>
+
+          <ol class="qf__progress mono" aria-hidden="true" data-progress>
+            <li class="is-current">01 Proyecto</li>
+            <li>02 Contexto</li>
+            <li>03 Tus datos</li>
+          </ol>
+          <p class="sr-only" aria-live="polite" data-step-status></p>
+
+          <!-- Paso 1 -->
+          <fieldset class="qf__step" data-step="1">
+            <legend class="qf__legend display"><span class="mono">Paso 1 de 3</span>¿Qué quieres hacer?</legend>
+
+            <fieldset class="field" data-group="tipo">
+              <legend>Tipo de proyecto <span aria-hidden="true">*</span><span class="sr-only">(obligatorio)</span></legend>
+              <div class="choices">
+                {tipos.map((t) => <label class="choice"><input type="radio" name="tipo" value={t} required aria-describedby="err-tipo" /><span>{t}</span></label>)}
+              </div>
+              <p class="error-msg" id="err-tipo" data-error-for="tipo"></p>
+            </fieldset>
+
+            <fieldset class="field" data-group="servicio">
+              <legend>¿Qué necesitas de nosotros? <span aria-hidden="true">*</span><span class="sr-only">(obligatorio)</span></legend>
+              <div class="choices">
+                {servicios.map((t) => <label class="choice"><input type="radio" name="servicio" value={t} required aria-describedby="err-servicio" /><span>{t}</span></label>)}
+              </div>
+              <p class="error-msg" id="err-servicio" data-error-for="servicio"></p>
+            </fieldset>
+
+            <fieldset class="field">
+              <legend>¿En qué punto estás? <span class="muted">(opcional)</span></legend>
+              <div class="choices">
+                {situaciones.map((t) => <label class="choice"><input type="radio" name="situacion" value={t} /><span>{t}</span></label>)}
+              </div>
+            </fieldset>
+          </fieldset>
+
+          <!-- Paso 2 -->
+          <fieldset class="qf__step" data-step="2">
+            <legend class="qf__legend display"><span class="mono">Paso 2 de 3</span>Algo de contexto</legend>
+
+            <div class="field">
+              <label for="ubicacion">Ciudad o zona del proyecto <span aria-hidden="true">*</span><span class="sr-only">(obligatorio)</span></label>
+              <input class="input" id="ubicacion" name="ubicacion" type="text" required maxlength="120" autocomplete="address-level2" aria-describedby="err-ubicacion" />
+              <p class="error-msg" id="err-ubicacion" data-error-for="ubicacion"></p>
+            </div>
+
+            <fieldset class="field">
+              <legend>¿Cuándo te gustaría empezar? <span class="muted">(opcional)</span></legend>
+              <div class="choices">
+                {plazos.map((t) => <label class="choice"><input type="radio" name="plazo" value={t} /><span>{t}</span></label>)}
+              </div>
+            </fieldset>
+
+            <div class="field">
+              <label for="presupuesto">Presupuesto aproximado <span class="muted">(opcional)</span></label>
+              <input class="input" id="presupuesto" name="presupuesto" type="text" maxlength="80" aria-describedby="hint-presupuesto" />
+              <p class="hint" id="hint-presupuesto">Si ya tienes una cifra o un rango en mente, nos ayuda a orientar la propuesta.</p>
+            </div>
+
+            <div class="field">
+              <label for="mensaje">Cuéntanos más <span class="muted">(opcional)</span></label>
+              <textarea class="textarea" id="mensaje" name="mensaje" maxlength="2000" rows="4" aria-describedby="hint-mensaje"></textarea>
+              <p class="hint" id="hint-mensaje">Superficie, número de espacios, referencias que te gusten, lo que consideres importante.</p>
+            </div>
+          </fieldset>
+
+          <!-- Paso 3 -->
+          <fieldset class="qf__step" data-step="3">
+            <legend class="qf__legend display"><span class="mono">Paso 3 de 3</span>¿Cómo te contactamos?</legend>
+
+            <div class="qf__row">
+              <div class="field">
+                <label for="nombre">Nombre <span aria-hidden="true">*</span><span class="sr-only">(obligatorio)</span></label>
+                <input class="input" id="nombre" name="nombre" type="text" required maxlength="100" autocomplete="name" aria-describedby="err-nombre" />
+                <p class="error-msg" id="err-nombre" data-error-for="nombre"></p>
+              </div>
+              <div class="field">
+                <label for="email">Correo electrónico <span aria-hidden="true">*</span><span class="sr-only">(obligatorio)</span></label>
+                <input class="input" id="email" name="email" type="email" required maxlength="160" autocomplete="email" inputmode="email" aria-describedby="err-email" />
+                <p class="error-msg" id="err-email" data-error-for="email"></p>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="telefono">Teléfono <span class="muted">(opcional)</span></label>
+              <input class="input" id="telefono" name="telefono" type="tel" maxlength="30" autocomplete="tel" inputmode="tel" aria-describedby="err-telefono" />
+              <p class="error-msg" id="err-telefono" data-error-for="telefono"></p>
+            </div>
+
+            <fieldset class="field">
+              <legend>Prefiero que me contacten por <span class="muted">(opcional)</span></legend>
+              <div class="choices">
+                {prefs.map((t, i) => <label class="choice"><input type="radio" name="preferencia" value={t} checked={i === 0} /><span>{t}</span></label>)}
+              </div>
+            </fieldset>
+
+            <div class="field qf__consent">
+              <label class="qf__check">
+                <input type="checkbox" name="consentimiento" value="sí" required aria-describedby="err-consentimiento" />
+                <span>Acepto que ALVRA STUDIO use estos datos únicamente para responder a mi solicitud, según el <a href="/privacidad/">aviso de privacidad</a>. <span aria-hidden="true">*</span></span>
+              </label>
+              <p class="error-msg" id="err-consentimiento" data-error-for="consentimiento"></p>
+            </div>
+
+            <!-- Trampa anti-spam: invisible para personas -->
+            <div class="hp" aria-hidden="true">
+              <label for="sitio_web">No completar</label>
+              <input id="sitio_web" name="sitio_web" type="text" tabindex="-1" autocomplete="off" />
+            </div>
+          </fieldset>
+
+          <div class="qf__nav">
+            <button type="button" class="btn btn--ghost" data-prev hidden>← Anterior</button>
+            <button type="button" class="btn" data-next hidden>Siguiente <span class="arrow" aria-hidden="true">→</span></button>
+            <button type="submit" class="btn btn--accent" data-submit disabled={!endpoint}>
+              <span data-submit-label>Enviar solicitud</span> <span class="arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+
+          {!endpoint && (
+            <p class="demo-note qf__noendpoint"><strong>Muy pronto</strong> El envío en línea se activará en los próximos días. Puedes completar el cuestionario para preparar tu solicitud; por ahora no se envía.</p>
+          )}
+
+          <div class="qf__status" role="status" aria-live="polite" data-status></div>
+        </form>
+
+        <div class="qf__done" data-done hidden tabindex="-1">
+          <p class="eyebrow">Solicitud recibida</p>
+          <h2 class="display qf__done-t">Gracias. Ya tenemos tu proyecto.</h2>
+          <p class="lead">Revisaremos tu información y te contactaremos por <strong data-done-pref>correo</strong> para acordar una primera conversación.</p>
+          <ol class="qf__next">
+            <li><span class="mono">01</span> Revisamos tu solicitud.</li>
+            <li><span class="mono">02</span> Te contactamos para conocer más detalles.</li>
+            <li><span class="mono">03</span> Agendamos una conversación o visita al sitio.</li>
+          </ol>
+          <a class="link" href="/proyectos/">Mientras tanto, explora nuestros proyectos →</a>
+        </div>
+      </div>
+
+      <aside class="c__summary" aria-labelledby="sum-t" data-summary-wrap>
+        <div class="sum">
+          <h2 id="sum-t" class="mono sum__t">Resumen de tu solicitud</h2>
+          <dl class="sum__dl" data-summary>
+            <div><dt>Proyecto</dt><dd data-s="tipo">—</dd></div>
+            <div><dt>Servicio</dt><dd data-s="servicio">—</dd></div>
+            <div><dt>Situación</dt><dd data-s="situacion">—</dd></div>
+            <div><dt>Ubicación</dt><dd data-s="ubicacion">—</dd></div>
+            <div><dt>Inicio</dt><dd data-s="plazo">—</dd></div>
+            <div><dt>Presupuesto</dt><dd data-s="presupuesto">—</dd></div>
+            <div><dt>Contacto</dt><dd data-s="nombre">—</dd></div>
+          </dl>
+          <p class="sum__foot muted">Así recibiremos tu solicitud. Puedes editarla antes de enviarla.</p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .c__grid {
+    row-gap: 3rem;
+    align-items: start;
+  }
+  .c__head {
+    grid-column: 1 / span 4;
+    display: grid;
+    gap: 1.5rem;
+    position: sticky;
+    top: calc(var(--header-h) + 2rem);
+  }
+  .c__title {
+    font-size: var(--t-2xl);
+    line-height: 0.94;
+  }
+  .c__title em {
+    display: block;
+  }
+  .c__head .lead {
+    font-size: var(--t-md);
+  }
+  .c__alt {
+    display: grid;
+    gap: 0.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--line);
+  }
+  .c__alt ul {
+    list-style: none;
+  }
+  .c__zona {
+    font-size: var(--t-sm);
+  }
+  .c__form-col {
+    grid-column: 5 / span 5;
+  }
+  .c__summary {
+    grid-column: 10 / span 3;
+    position: sticky;
+    top: calc(var(--header-h) + 2rem);
+  }
+  @media (max-width: 1100px) {
+    .c__head {
+      grid-column: 1 / -1;
+      position: static;
+    }
+    .c__form-col {
+      grid-column: 1 / span 8;
+    }
+    .c__summary {
+      grid-column: 9 / span 4;
+    }
+  }
+  @media (max-width: 800px) {
+    .c__form-col,
+    .c__summary {
+      grid-column: 1 / -1;
+      position: static;
+    }
+  }
+
+  .qf {
+    display: grid;
+    gap: 2.5rem;
+  }
+  .qf__progress {
+    display: none;
+    list-style: none;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--line);
+  }
+  :global(.js) .qf__progress {
+    display: grid;
+  }
+  .qf__progress li {
+    padding-top: 0.75rem;
+    color: var(--graphite);
+    position: relative;
+  }
+  .qf__progress li::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0.5rem;
+    height: 2px;
+    background: transparent;
+    transition: background-color 0.3s;
+  }
+  .qf__progress li.is-current,
+  .qf__progress li.is-done {
+    color: var(--ink);
+  }
+  .qf__progress li.is-current::before {
+    background: var(--accent);
+  }
+  .qf__progress li.is-done::before {
+    background: var(--ink);
+  }
+  .qf__step {
+    display: grid;
+    gap: 2rem;
+  }
+  :global(.js) .qf__step:not(.is-active) {
+    display: none;
+  }
+  .qf__legend {
+    display: grid;
+    gap: 0.6rem;
+    font-size: var(--t-xl);
+    margin-bottom: 0.5rem;
+    padding: 0;
+  }
+  .qf__legend .mono {
+    color: var(--accent);
+  }
+  .qf__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  @media (max-width: 600px) {
+    .qf__row {
+      grid-template-columns: 1fr;
+    }
+  }
+  .qf__check {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.9rem;
+    align-items: start;
+    font: 400 var(--t-sm) / 1.5 var(--f-body);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
+  }
+  .qf__check input {
+    width: 20px;
+    height: 20px;
+    margin: 0.1rem 0 0;
+    accent-color: var(--accent);
+  }
+  .qf__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--ink);
+  }
+  .qf__nav [data-next],
+  .qf__nav [data-submit] {
+    margin-left: auto;
+  }
+  .qf__nav [hidden] {
+    display: none;
+  }
+  .qf__status:empty {
+    display: none;
+  }
+  .qf__status {
+    padding: 1rem 1.25rem;
+    border-left: 3px solid var(--ink);
+    background: var(--paper-2);
+    display: grid;
+    gap: 0.75rem;
+  }
+  .qf__status.is-error {
+    border-color: var(--accent);
+  }
+  .qf__status :global(.btn) {
+    justify-self: start;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+    font-size: var(--t-sm);
+  }
+  .qf__status :global(.spinner) {
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: qf-spin 0.8s linear infinite;
+  }
+  @keyframes qf-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .qf__done {
+    display: grid;
+    gap: 1.5rem;
+    padding: var(--s-3) 0;
+    border-top: 2px solid var(--accent);
+  }
+  .qf__done:focus {
+    outline: none;
+  }
+  .qf__done-t {
+    font-size: var(--t-xl);
+  }
+  .qf__next {
+    list-style: none;
+    display: grid;
+    border-top: 1px solid var(--line);
+  }
+  .qf__next li {
+    padding-block: 0.8rem;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 1rem;
+  }
+  .qf__next .mono {
+    color: var(--accent);
+    padding-top: 0.2rem;
+  }
+
+  .sum {
+    padding: 1.5rem;
+    background: var(--paper-2);
+    border-top: 2px solid var(--ink);
+  }
+  .sum__t {
+    margin-bottom: 1rem;
+    font-weight: 400;
+  }
+  .sum__dl {
+    margin: 0;
+    display: grid;
+  }
+  .sum__dl div {
+    display: grid;
+    gap: 0.15rem;
+    padding-block: 0.6rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .sum__dl dt {
+    font-family: var(--f-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--graphite);
+  }
+  .sum__dl dd {
+    margin: 0;
+    font-size: var(--t-sm);
+    overflow-wrap: anywhere;
+  }
+  .sum__dl dd.is-empty {
+    color: var(--graphite);
+  }
+  .sum__foot {
+    margin-top: 1rem;
+    font-size: var(--t-xs);
+  }
+  .c__summary:not(.is-ready) {
+    display: none;
+  }
+</style>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('[data-form]')!;
+  const steps = [...form.querySelectorAll<HTMLFieldSetElement>('[data-step]')];
+  const prev = form.querySelector<HTMLButtonElement>('[data-prev]')!;
+  const next = form.querySelector<HTMLButtonElement>('[data-next]')!;
+  const submit = form.querySelector<HTMLButtonElement>('[data-submit]')!;
+  const submitLabel = form.querySelector<HTMLElement>('[data-submit-label]')!;
+  const status = form.querySelector<HTMLElement>('[data-status]')!;
+  const stepStatus = form.querySelector<HTMLElement>('[data-step-status]')!;
+  const progress = [...form.querySelectorAll<HTMLLIElement>('[data-progress] li')];
+  const done = document.querySelector<HTMLElement>('[data-done]')!;
+  const summaryWrap = document.querySelector<HTMLElement>('[data-summary-wrap]')!;
+  const endpoint = form.dataset.endpoint || '';
+  const startedAt = Date.now();
+  let current = 0;
+  let sending = false;
+
+  summaryWrap.classList.add('is-ready');
+
+  const MSG: Record<string, string> = {
+    tipo: 'Elige el tipo de proyecto.',
+    servicio: 'Indícanos qué necesitas.',
+    ubicacion: 'Escribe la ciudad o zona del proyecto.',
+    nombre: 'Escribe tu nombre.',
+    email: 'Escribe un correo válido, por ejemplo nombre@dominio.com.',
+    telefono: 'Revisa el teléfono: usa solo números, espacios, + o guiones.',
+    consentimiento: 'Necesitamos tu autorización para poder responderte.',
+  };
+
+  function setError(name: string, msg: string) {
+    const el = form.querySelector<HTMLElement>(`[data-error-for="${name}"]`);
+    if (el) el.textContent = msg;
+    form.querySelectorAll<HTMLInputElement>(`[name="${name}"]`).forEach((i) => {
+      if (msg) i.setAttribute('aria-invalid', 'true');
+      else i.removeAttribute('aria-invalid');
+    });
+  }
+
+  function validateField(name: string): boolean {
+    const inputs = [...form.querySelectorAll<HTMLInputElement>(`[name="${name}"]`)];
+    if (!inputs.length) return true;
+    const first = inputs[0];
+    let ok = true;
+    if (first.type === 'radio') ok = !first.required || inputs.some((i) => i.checked);
+    else if (first.type === 'checkbox') ok = !first.required || first.checked;
+    else {
+      const v = first.value.trim();
+      if (first.required && !v) ok = false;
+      else if (name === 'email' && v) ok = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v);
+      else if (name === 'telefono' && v) ok = /^[+\d][\d\s()-]{6,}$/.test(v);
+    }
+    setError(name, ok ? '' : MSG[name] || 'Revisa este campo.');
+    return ok;
+  }
+
+  function validateStep(i: number): boolean {
+    const names = new Set(
+      [...steps[i].querySelectorAll<HTMLInputElement>('input[required], textarea[required], input[name="email"], input[name="telefono"]')].map((x) => x.name)
+    );
+    let firstBad: string | null = null;
+    names.forEach((n) => {
+      if (!validateField(n) && !firstBad) firstBad = n;
+    });
+    if (firstBad) {
+      form.querySelector<HTMLInputElement>(`[name="${firstBad}"]`)?.focus();
+      return false;
+    }
+    return true;
+  }
+
+  function show(i: number, focus = true) {
+    current = i;
+    steps.forEach((s, k) => s.classList.toggle('is-active', k === i));
+    progress.forEach((p, k) => {
+      p.classList.toggle('is-current', k === i);
+      p.classList.toggle('is-done', k < i);
+    });
+    prev.hidden = i === 0;
+    next.hidden = i === steps.length - 1;
+    submit.hidden = i !== steps.length - 1;
+    stepStatus.textContent = `Paso ${i + 1} de ${steps.length}`;
+    if (focus) steps[i].querySelector<HTMLElement>('legend')?.setAttribute('tabindex', '-1');
+    if (focus) steps[i].querySelector<HTMLElement>('legend')?.focus();
+  }
+
+  next.addEventListener('click', () => validateStep(current) && show(current + 1));
+  prev.addEventListener('click', () => show(current - 1));
+
+  // Validación al salir de cada campo (no mientras se escribe)
+  form.addEventListener('focusout', (e) => {
+    const t = e.target as HTMLInputElement;
+    if (t.name && (t.required || t.name === 'email' || t.name === 'telefono') && t.type !== 'radio') validateField(t.name);
+  });
+  form.addEventListener('change', (e) => {
+    const t = e.target as HTMLInputElement;
+    if (t.type === 'radio' || t.type === 'checkbox') validateField(t.name);
+    renderSummary();
+  });
+  form.addEventListener('input', renderSummary);
+
+  function data() {
+    const fd = new FormData(form);
+    const o: Record<string, string> = {};
+    fd.forEach((v, k) => (o[k] = String(v).trim()));
+    return o;
+  }
+
+  function renderSummary() {
+    const d = data();
+    document.querySelectorAll<HTMLElement>('[data-s]').forEach((el) => {
+      const k = el.dataset.s!;
+      let v = d[k] || '';
+      if (k === 'nombre' && v) v = [v, d.email, d.telefono].filter(Boolean).join(' · ');
+      el.textContent = v || '—';
+      el.classList.toggle('is-empty', !v);
+    });
+  }
+
+  function setStatus(html: string, error = false) {
+    status.innerHTML = html;
+    status.classList.toggle('is-error', error);
+  }
+
+  function setLoading(on: boolean) {
+    sending = on;
+    submit.disabled = on;
+    prev.disabled = on;
+    submit.setAttribute('aria-busy', String(on));
+    submitLabel.textContent = on ? 'Enviando…' : 'Enviar solicitud';
+    if (on) setStatus('<span style="display:flex;gap:.6rem;align-items:center"><span class="spinner" aria-hidden="true"></span> Enviando tu solicitud…</span>');
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (sending) return;
+
+    for (let i = 0; i < steps.length; i++) {
+      if (!validateStep(i)) {
+        show(i, false);
+        validateStep(i);
+        setStatus('Revisa los campos marcados antes de enviar.', true);
+        return;
+      }
+    }
+
+    const d = data();
+    // Antispam básico: honeypot y tiempo mínimo de llenado.
+    if (d.sitio_web || Date.now() - startedAt < 4000) {
+      setStatus('No pudimos procesar el envío. Espera unos segundos e inténtalo de nuevo.', true);
+      return;
+    }
+    if (!endpoint) {
+      setStatus('El formulario todavía no está conectado a un servicio de envío. <strong>Tu solicitud no se ha enviado.</strong>', true);
+      return;
+    }
+
+    delete d.sitio_web;
+    const payload = { ...d, _subject: `Nueva solicitud: ${d.tipo} — ${d.ubicacion}`, origen: location.href };
+
+    setLoading(true);
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 15000);
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal,
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      // Éxito confirmado por el servidor.
+      form.hidden = true;
+      done.hidden = false;
+      const pref = done.querySelector('[data-done-pref]');
+      if (pref) pref.textContent = (d.preferencia || 'correo').toLowerCase();
+      done.focus();
+      done.scrollIntoView({ block: 'start', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    } catch (err) {
+      const offline = !navigator.onLine;
+      setStatus(
+        `<p><strong>No pudimos enviar tu solicitud.</strong> ${offline ? 'Parece que no hay conexión a internet.' : 'Hubo un problema con el servicio de envío.'} Tus respuestas siguen aquí; puedes intentarlo de nuevo.</p><button type="submit" class="btn btn--ghost">Reintentar envío</button>`,
+        true
+      );
+    } finally {
+      clearTimeout(timer);
+      setLoading(false);
+    }
+  });
+
+  show(0, false);
+  renderSummary();
+</script>

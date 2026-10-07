@@ -1,0 +1,733 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import TrazoObra from '../components/TrazoObra.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import { proceso, serviciosPrincipales } from '../lib/contenido';
+import { site } from '../config/site';
+import { Image, getImage } from 'astro:assets';
+import mesa from '../assets/estudio/mesa.jpg';
+import concreto from '../assets/materia/concreto.jpg';
+import madera from '../assets/materia/madera.jpg';
+import piedra from '../assets/materia/piedra.jpg';
+import barro from '../assets/materia/barro.jpg';
+
+const materiales = [
+  { img: concreto, n: 'Concreto aparente', t: 'Estructura y acabado en un solo gesto. Honesto y durable.' },
+  { img: madera, n: 'Madera', t: 'Calidez y escala doméstica. Envejece con el lugar.' },
+  { img: piedra, n: 'Piedra', t: 'Masa y anclaje al terreno. Inercia térmica natural.' },
+  { img: barro, n: 'Barro cocido', t: 'Oficio local y color de la tierra en pisos y celosías.' },
+];
+
+const todos = (await getCollection('proyectos')).sort((a, b) => a.data.orden - b.data.orden);
+const destacados = todos.filter((p) => p.data.destacado).slice(0, 3);
+const hero = destacados[0] ?? todos[0];
+const banda = todos.find((p) => p.data.dibujo === 'pabellon' && p.data.portada);
+// Póster del video del hero: misma imagen que el primer fotograma.
+const poster = hero?.data.portada ? await getImage({ src: hero.data.portada, width: 1920, format: 'webp', quality: 72 }) : null;
+const aviso = (ia: boolean) => (ia && site.mostrarAvisosDemo ? 'Imagen generada con IA · demo' : undefined);
+---
+<Base overlayHeader>
+  <!-- HERO con video de fondo -->
+  <section class="hv on-ink" aria-labelledby="hero-title" data-hero>
+    <div class="hv__media" aria-hidden="true">
+      {poster && <img class="hv__poster" src={poster.src} alt="" width="1920" height="1072" fetchpriority="high" decoding="async" />}
+      <video
+        class="hv__video"
+        muted
+        loop
+        playsinline
+        preload="none"
+        poster={poster?.src}
+        data-hero-video
+        data-src-lg="/video/hero-1080.mp4"
+        data-src-sm="/video/hero-720.mp4"
+      ></video>
+      <div class="hv__veil"></div>
+    </div>
+
+    <div class="wrap hv__in">
+      <div class="hv__copy">
+        <p class="eyebrow">Estudio de arquitectura y construcción</p>
+        <h1 id="hero-title" class="hv__title display">
+          Diseñamos tu espacio <em class="acc">y lo construimos.</em>
+        </h1>
+        <p class="lead hv__lead">
+          En ALVRA STUDIO un mismo equipo se encarga del proyecto arquitectónico y de la obra. Lo que dibujamos contigo es lo que construimos.
+        </p>
+        <div class="ctas">
+          <a class="btn btn--accent" href="/contacto/">Cuéntanos tu proyecto <span class="arrow" aria-hidden="true">→</span></a>
+          <a class="btn btn--ghost" href="/proyectos/">Explora nuestros proyectos</a>
+        </div>
+      </div>
+
+      <div class="hv__foot">
+        <ol class="hv__strip" aria-label="Lo que hacemos, en tres pasos">
+          <li><span class="mono">01</span> Idea</li>
+          <li><span class="mono">02</span> Proyecto</li>
+          <li><span class="mono">03</span> Obra</li>
+        </ol>
+        <div class="hv__ctrl">
+          {site.mostrarAvisosDemo && hero?.data.imagenesIA && <span class="mono hv__ia">Video generado con IA · demo</span>}
+          <button type="button" class="hv__toggle mono" data-hero-toggle aria-pressed="false" hidden>
+            <span class="hv__icon" aria-hidden="true"></span><span data-hero-toggle-label>Pausar video</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRAZO → OBRA -->
+  {hero && (
+    <section class="section to-sec" aria-labelledby="to-title">
+      <div class="wrap grid to-sec__grid">
+        <div class="to-sec__copy">
+          <p class="eyebrow">Del trazo a la obra</p>
+          <h2 id="to-title" class="display to-sec__title">Lo que dibujamos <em class="acc">es lo que construimos.</em></h2>
+          <p class="muted">Desliza sobre la imagen para pasar del dibujo al resultado. Así trabajamos: cada línea del proyecto se piensa para poder construirse.</p>
+          <a class="link" href={`/proyectos/${hero.id}/`}>{hero.data.titulo}{hero.data.demo && site.mostrarAvisosDemo ? ' · demo' : ''} →</a>
+        </div>
+        <div class="to-sec__visual">
+          <TrazoObra dibujo={hero.data.dibujo} titulo={hero.data.titulo} portada={hero.data.portada} portadaAlt={hero.data.portadaAlt} trazo={hero.data.trazo} demo={hero.data.demo} inicial={58} aviso={aviso(hero.data.imagenesIA)} rotulo="Alzado · Lámina 01" />
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- PROYECTOS -->
+  <section class="section" aria-labelledby="sel-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <span class="sec-head__num">L-01 / Proyectos</span>
+        <h2 id="sel-title" class="sec-head__title">Proyectos seleccionados</h2>
+        <div class="sec-head__aside"><a class="link" href="/proyectos/">Ver todos los proyectos →</a></div>
+      </header>
+
+      {site.mostrarAvisosDemo && todos.some((p) => p.data.demo) && (
+        <p class="demo-note sel__note"><strong>Demo</strong> Proyectos e imágenes ilustrativos, generados con IA. Pronto, obra real del estudio.</p>
+      )}
+
+      <div class="sel grid">
+        {destacados.map((p, i) => (
+          <div class:list={['sel__item', `sel__item--${i}`]} data-reveal>
+            <ProjectCard p={p} index={i} size={i === 0 ? 'lg' : 'md'} />
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {banda?.data.portada && (
+    <section class="banda" aria-label="Manifiesto">
+      <Image class="banda__img" src={banda.data.portada} alt={banda.data.portadaAlt || ''} widths={[800, 1400, 2200]} sizes="100vw" />
+      <div class="banda__veil" aria-hidden="true"></div>
+      <div class="wrap banda__in">
+        <p class="display banda__q" data-reveal>Un buen proyecto no termina en el plano. <em>Se demuestra en la obra.</em></p>
+        <p class="mono banda__meta">{banda.data.titulo}{aviso(banda.data.imagenesIA) ? ' · imagen generada con IA · demo' : ''}</p>
+      </div>
+    </section>
+  )}
+
+  <!-- ESTUDIO -->
+  <section class="section on-ink intro" aria-labelledby="intro-title">
+    <div class="wrap grid">
+      <p class="intro__num mono">L-02 / Estudio</p>
+      <div class="intro__main">
+        <h2 id="intro-title" class="intro__title display">
+          Diseñar y construir no son dos etapas separadas. <span class="acc">Son una misma responsabilidad.</span>
+        </h2>
+      </div>
+      <div class="intro__side">
+        <p>
+          Cuando quien diseña también construye, las ideas se piensan desde el inicio para poder ejecutarse, y la obra se resuelve sin perder la intención del proyecto.
+        </p>
+        <p>
+          Trabajamos con atención a la luz, a la proporción de los espacios y a la honestidad de los materiales, siempre con presupuestos y tiempos claros.
+        </p>
+        <a class="link" href="/estudio/">Conoce el estudio →</a>
+      </div>
+      <figure class="intro__fig" data-reveal>
+        <Image src={mesa} alt="Mesa de trabajo con planos, una maqueta y muestras de materiales (imagen ilustrativa generada con IA)" widths={[640, 1000, 1600]} sizes="(min-width: 900px) 70vw, 100vw" />
+        {site.mostrarAvisosDemo && <figcaption class="mono">Imagen ilustrativa generada con IA · sustituir por fotografía del estudio</figcaption>}
+      </figure>
+    </div>
+  </section>
+
+  <!-- SERVICIOS -->
+  <section class="section" aria-labelledby="serv-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <span class="sec-head__num">L-03 / Servicios</span>
+        <h2 id="serv-title" class="sec-head__title">Qué hacemos</h2>
+        <div class="sec-head__aside"><a class="link" href="/servicios/">Detalle de servicios →</a></div>
+      </header>
+      <div class="serv grid">
+        {serviciosPrincipales.map((s, i) => (
+          <article class="serv__item" data-reveal>
+            <p class="mono muted">0{i + 1}</p>
+            <h3 class="display serv__title">{s.titulo}</h3>
+            <p class="serv__intro">{s.intro}</p>
+            <p class="serv__valor muted">{s.valor}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- MATERIA -->
+  <section class="section materia" aria-labelledby="mat-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <span class="sec-head__num">L-04 / Materia</span>
+        <h2 id="mat-title" class="sec-head__title">Pocos materiales, <em class="acc">bien construidos.</em></h2>
+        <div class="sec-head__aside mono muted">{site.mostrarAvisosDemo && 'Texturas generadas con IA · demo'}</div>
+      </header>
+      <ul class="mat">
+        {materiales.map((m, i) => (
+          <li class="mat__item" data-reveal style={`--d:${i * 90}ms`}>
+            <div class="mat__img">
+              <Image src={m.img} alt="" widths={[360, 600, 900]} sizes="(min-width: 900px) 25vw, 50vw" loading="lazy" />
+            </div>
+            <p class="mono mat__n"><span>{String(i + 1).padStart(2, '0')}</span> {m.n}</p>
+            <p class="mat__t muted">{m.t}</p>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- PROCESO -->
+  <section class="section proc-prev" aria-labelledby="proc-title">
+    <div class="wrap">
+      <header class="sec-head">
+        <span class="sec-head__num">L-05 / Proceso</span>
+        <h2 id="proc-title" class="sec-head__title">De la primera conversación a la entrega</h2>
+        <div class="sec-head__aside"><a class="link" href="/proceso/">Cómo trabajamos →</a></div>
+      </header>
+      <ol class="proc-prev__list">
+        {proceso.map((p, i) => (
+          <li data-reveal>
+            <span class="mono proc-prev__n">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="proc-prev__t">{p.titulo}</h3>
+            <p class="muted">{p.corto}</p>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-band" aria-labelledby="cta-title">
+    <div class="wrap cta-band__in">
+      <h2 id="cta-title" class="display cta-band__title">¿Tienes un terreno, un espacio o una idea?</h2>
+      <div class="cta-band__side">
+        <p>Cuéntanos en unos minutos qué tienes en mente. Revisamos cada solicitud y te respondemos con los siguientes pasos.</p>
+        <a class="btn btn--accent" href="/contacto/">Cuéntanos tu proyecto <span class="arrow" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  // Video de fondo: decorativo, silenciado y en bucle. No se descarga con
+  // prefers-reduced-motion ni con ahorro de datos; en ese caso queda el póster.
+  const video = document.querySelector<HTMLVideoElement>('[data-hero-video]');
+  const toggle = document.querySelector<HTMLButtonElement>('[data-hero-toggle]');
+  const label = document.querySelector<HTMLElement>('[data-hero-toggle-label]');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+
+  if (video && toggle && !reduce && !saveData) {
+    video.src = matchMedia('(min-width: 900px)').matches ? video.dataset.srcLg! : video.dataset.srcSm!;
+    let pausedByUser = false;
+
+    const setState = (playing: boolean) => {
+      toggle.setAttribute('aria-pressed', String(!playing));
+      if (label) label.textContent = playing ? 'Pausar video' : 'Reproducir video';
+    };
+
+    video.addEventListener('playing', () => {
+      video.classList.add('is-playing');
+      toggle.hidden = false;
+      setState(true);
+    });
+    video.addEventListener('pause', () => setState(false));
+    video.addEventListener('error', () => (toggle.hidden = true));
+
+    toggle.addEventListener('click', () => {
+      if (video.paused) {
+        pausedByUser = false;
+        video.play().catch(() => {});
+      } else {
+        pausedByUser = true;
+        video.pause();
+      }
+    });
+
+    // Solo se reproduce mientras el hero es visible (ahorra batería y CPU).
+    new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !pausedByUser) video.play().catch(() => {});
+      else if (!e.isIntersecting) video.pause();
+    }).observe(video);
+  }
+</script>
+
+<style>
+  /* ---------- Hero con video ---------- */
+  .hv {
+    position: relative;
+    min-height: max(620px, 100svh);
+    display: grid;
+    overflow: hidden;
+    isolation: isolate;
+    color: #fff;
+  }
+  .hv__media {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--navy);
+  }
+  .hv__poster,
+  .hv__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 60% 50%;
+  }
+  .hv__video {
+    opacity: 0;
+    transition: opacity 1.2s var(--ease);
+  }
+  .hv__video.is-playing {
+    opacity: 1;
+  }
+  .hv__veil {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(180deg, rgb(10 20 48 / 0.6) 0%, rgb(10 20 48 / 0) 20%),
+      linear-gradient(90deg, rgb(10 20 48 / 0.88) 0%, rgb(10 20 48 / 0.62) 38%, rgb(10 20 48 / 0.1) 70%),
+      linear-gradient(0deg, rgb(10 20 48 / 0.85) 0%, rgb(10 20 48 / 0) 32%);
+  }
+  .hv__in {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    padding-top: calc(var(--header-h) + clamp(2.5rem, 8vh, 6rem));
+  }
+  .hv__copy {
+    display: grid;
+    gap: 1.5rem;
+    align-content: center;
+    max-width: 40rem;
+  }
+  .hv__copy .eyebrow {
+    color: #dfe5f5;
+  }
+  .hv__title {
+    font-size: clamp(3rem, 7.4vw, 7.6rem);
+    line-height: 0.92;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 40px rgb(10 20 48 / 0.35);
+  }
+  .hv__title em {
+    display: block;
+  }
+  .hv__lead {
+    color: #e6eaf5;
+    max-width: 34ch;
+  }
+  .hv .btn--ghost {
+    background: rgb(10 20 48 / 0.25);
+    backdrop-filter: blur(6px);
+  }
+  .hv__foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    padding-block: var(--s-3) 1.5rem;
+    margin-top: var(--s-3);
+    border-top: 1px solid rgb(255 255 255 / 0.22);
+  }
+  .hv__strip {
+    list-style: none;
+    display: flex;
+    gap: clamp(1.25rem, 4vw, 3.5rem);
+    font-family: var(--f-display);
+    font-size: var(--t-lg);
+  }
+  .hv__strip .mono {
+    color: var(--accent-on-ink);
+    margin-right: 0.4rem;
+  }
+  .hv__ctrl {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .hv__ia {
+    color: #c9d1e8;
+    font-size: 0.625rem;
+  }
+  .hv__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding: 0 1rem;
+    border: 1px solid rgb(255 255 255 / 0.5);
+    background: rgb(10 20 48 / 0.3);
+    color: #fff;
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+  }
+  .hv__toggle:hover {
+    border-color: #fff;
+  }
+  .hv__icon {
+    width: 10px;
+    height: 12px;
+    border-left: 3px solid currentColor;
+    border-right: 3px solid currentColor;
+  }
+  .hv__toggle[aria-pressed='true'] .hv__icon {
+    width: 0;
+    height: 0;
+    border-right: 0;
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
+    border-left: 10px solid currentColor;
+  }
+  @media (max-width: 700px) {
+    .hv__poster,
+    .hv__video {
+      object-position: 66% 50%;
+    }
+    .hv__veil {
+      background: linear-gradient(0deg, rgb(10 20 48 / 0.94) 12%, rgb(10 20 48 / 0.6) 58%, rgb(10 20 48 / 0.15) 100%);
+    }
+    .hv__strip {
+      font-size: 1.05rem;
+    }
+  }
+
+  /* ---------- Trazo → obra ---------- */
+  .to-sec__grid {
+    row-gap: 2.5rem;
+    align-items: center;
+  }
+  .to-sec__copy {
+    grid-column: 1 / span 4;
+    display: grid;
+    gap: 1.25rem;
+    justify-items: start;
+  }
+  .to-sec__title {
+    font-size: var(--t-xl);
+    line-height: 1.02;
+  }
+  .to-sec__title em {
+    display: block;
+  }
+  .to-sec__visual {
+    grid-column: 5 / span 8;
+  }
+  @media (max-width: 1000px) {
+    .to-sec__copy,
+    .to-sec__visual {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .sel__note {
+    margin-bottom: var(--s-3);
+  }
+  .sel {
+    row-gap: var(--s-3);
+  }
+  .sel__item--0 {
+    grid-column: 1 / span 8;
+    grid-row: span 2;
+  }
+  .sel__item--1 {
+    grid-column: 9 / span 4;
+    margin-top: 0;
+  }
+  .sel__item--2 {
+    grid-column: 9 / span 4;
+  }
+  @media (max-width: 900px) {
+    .sel__item--0,
+    .sel__item--1,
+    .sel__item--2 {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+  }
+
+  .banda {
+    position: relative;
+    min-height: clamp(420px, 78vh, 820px);
+    display: grid;
+    align-items: end;
+    overflow: hidden;
+    color: #fff;
+    background: var(--navy);
+  }
+  .banda :global(.banda__img) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .banda__veil {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgb(10 20 48 / 0) 30%, rgb(10 20 48 / 0.82) 100%);
+  }
+  .banda__in {
+    position: relative;
+    padding-block: var(--s-4) var(--s-3);
+    display: grid;
+    gap: 1.5rem;
+  }
+  .banda__q {
+    font-size: var(--t-2xl);
+    line-height: 0.98;
+    max-width: 16ch;
+    text-shadow: 0 2px 30px rgb(0 0 0 / 0.35);
+  }
+  .banda__q em {
+    color: #a9bbff;
+  }
+  .banda__meta {
+    color: #dfe5f5;
+  }
+
+  .intro__fig {
+    grid-column: 3 / -1;
+    margin: var(--s-3) 0 0;
+  }
+  .intro__fig :global(img) {
+    width: 100%;
+    aspect-ratio: 16 / 8;
+    object-fit: cover;
+  }
+  .intro__fig figcaption {
+    margin-top: 0.75rem;
+    color: #93a0c4;
+  }
+  @media (max-width: 900px) {
+    .intro__fig {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .mat {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--col-gap);
+  }
+  .mat__item {
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    transition-delay: var(--d);
+  }
+  .mat__item:nth-child(even) {
+    margin-top: var(--s-3);
+  }
+  .mat__img {
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    background: var(--paper-2);
+  }
+  .mat__img :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 1.2s var(--ease);
+  }
+  .mat__item:hover .mat__img :global(img) {
+    transform: scale(1.06);
+  }
+  .mat__n {
+    padding-top: 0.6rem;
+    border-top: 1px solid var(--ink);
+    color: var(--ink);
+  }
+  .mat__n span {
+    color: var(--accent);
+    margin-right: 0.4rem;
+  }
+  .mat__t {
+    font-size: var(--t-sm);
+    max-width: 30ch;
+  }
+  @media (max-width: 900px) {
+    .mat {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .intro {
+    row-gap: 2rem;
+  }
+  .intro .grid {
+    row-gap: 2rem;
+  }
+  .intro__num {
+    grid-column: 1 / span 2;
+    color: #93a0c4;
+    padding-top: 0.8rem;
+  }
+  .intro__main {
+    grid-column: 3 / span 6;
+  }
+  .intro__title {
+    font-size: var(--t-xl);
+    line-height: 1.08;
+  }
+  .intro__side {
+    grid-column: 9 / span 4;
+    display: grid;
+    gap: 1.1rem;
+    align-content: end;
+    color: #d3daec;
+  }
+  .intro__side .link {
+    color: var(--paper);
+    justify-self: start;
+  }
+  @media (max-width: 900px) {
+    .intro__num,
+    .intro__main,
+    .intro__side {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .serv {
+    row-gap: 3rem;
+  }
+  .serv__item {
+    grid-column: span 6;
+    display: grid;
+    gap: 0.9rem;
+    align-content: start;
+    padding-right: clamp(0px, 4vw, 4rem);
+  }
+  .serv__item + .serv__item {
+    border-left: 1px solid var(--line);
+    padding-left: var(--col-gap);
+  }
+  .serv__title {
+    font-size: var(--t-2xl);
+  }
+  .serv__intro {
+    font-size: var(--t-lg);
+    max-width: 34ch;
+  }
+  .serv__valor {
+    max-width: 46ch;
+  }
+  @media (max-width: 760px) {
+    .serv__item {
+      grid-column: 1 / -1;
+    }
+    .serv__item + .serv__item {
+      border-left: 0;
+      padding-left: 0;
+      border-top: 1px solid var(--line);
+      padding-top: 2rem;
+    }
+  }
+
+  .proc-prev {
+    padding-top: 0;
+  }
+  .proc-prev__list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: var(--col-gap);
+    counter-reset: p;
+  }
+  .proc-prev__list li {
+    position: relative;
+    display: grid;
+    gap: 0.6rem;
+    align-content: start;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--ink);
+  }
+  .proc-prev__list li::before {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 0;
+    width: 9px;
+    height: 9px;
+    background: var(--accent);
+    transform: rotate(45deg);
+  }
+  .proc-prev__n {
+    color: var(--graphite);
+  }
+  .proc-prev__t {
+    font-family: var(--f-display);
+    font-size: 1.5rem;
+    line-height: 1.05;
+  }
+  .proc-prev__list p {
+    font-size: var(--t-sm);
+  }
+  @media (max-width: 1000px) {
+    .proc-prev__list {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      row-gap: 2.5rem;
+    }
+  }
+  @media (max-width: 560px) {
+    .proc-prev__list {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .cta-band {
+    background: var(--paper-2);
+    border-top: 1px solid var(--line);
+    padding-block: var(--s-4);
+  }
+  .cta-band__in {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: var(--col-gap);
+    row-gap: 2rem;
+    align-items: end;
+  }
+  .cta-band__title {
+    grid-column: 1 / span 7;
+    font-size: var(--t-2xl);
+    line-height: 0.98;
+  }
+  .cta-band__side {
+    grid-column: 9 / span 4;
+    display: grid;
+    gap: 1.5rem;
+    justify-items: start;
+  }
+  @media (max-width: 900px) {
+    .cta-band__title,
+    .cta-band__side {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

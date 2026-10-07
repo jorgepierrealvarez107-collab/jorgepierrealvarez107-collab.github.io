@@ -1,0 +1,192 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { estados, site, type Estado } from '../../config/site';
+
+const proyectos = (await getCollection('proyectos')).sort((a, b) => a.data.orden - b.data.orden);
+const conteo = (e: Estado) => proyectos.filter((p) => p.data.estado === e).length;
+const filtros = (Object.keys(estados) as Estado[]).filter((e) => conteo(e) > 0);
+// Los filtros solo aparecen cuando hay suficientes proyectos para que sean útiles.
+const mostrarFiltros = proyectos.length >= 4 && filtros.length > 1;
+---
+<Base title="Proyectos" description="Proyectos de arquitectura y construcción de ALVRA STUDIO: obras construidas, en construcción y propuestas conceptuales.">
+  <section class="section">
+    <div class="wrap">
+      <header class="ph-head grid">
+        <p class="eyebrow ph-head__eb">Proyectos</p>
+        <h1 class="display ph-head__title">Obra construida, en proceso <em class="acc">y por venir.</em></h1>
+        <p class="lead ph-head__lead muted">
+          Cada proyecto indica su estado: construido, en construcción o conceptual. Abre cualquiera para ver el paso del trazo a la obra.
+        </p>
+      </header>
+
+      {site.mostrarAvisosDemo && proyectos.some((p) => p.data.demo) && (
+        <p class="demo-note"><strong>Demo</strong> Proyectos ilustrativos con imágenes generadas con IA, mientras publicamos nuestra obra.</p>
+      )}
+
+      <div class="toolbar">
+        {mostrarFiltros && (
+          <div class="filters" role="group" aria-label="Filtrar por estado" data-filters hidden>
+            <button type="button" class="filter" aria-pressed="true" data-filter="todos">Todos <span>{proyectos.length}</span></button>
+            {filtros.map((e) => (
+              <button type="button" class="filter" aria-pressed="false" data-filter={e}>
+                <span class:list={['tag', `tag--${e}`]}>{estados[e].label}</span> <span>{conteo(e)}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <p class="mono muted legend" aria-hidden="true">
+          <span class="tag tag--construido">Construido</span>
+          <span class="tag tag--en-obra">En obra</span>
+          <span class="tag tag--conceptual">Conceptual</span>
+        </p>
+      </div>
+
+      <p class="sr-only" aria-live="polite" data-filter-status></p>
+
+      <ul class="list grid" data-list>
+        {proyectos.map((p, i) => (
+          <li class:list={['list__item', i % 3 === 0 && 'list__item--wide']} data-estado={p.data.estado}>
+            <ProjectCard p={p} index={i} size={i % 3 === 0 ? 'lg' : 'md'} headingLevel="h2" />
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .ph-head {
+    row-gap: 1.5rem;
+    padding-bottom: var(--s-3);
+  }
+  .ph-head__eb {
+    grid-column: 1 / -1;
+  }
+  .ph-head__title {
+    grid-column: 1 / span 8;
+    font-size: var(--t-2xl);
+    line-height: 0.96;
+  }
+  .ph-head__lead {
+    grid-column: 9 / span 4;
+    align-self: end;
+    font-size: var(--t-md);
+  }
+  @media (max-width: 900px) {
+    .ph-head__title,
+    .ph-head__lead {
+      grid-column: 1 / -1;
+    }
+  }
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    padding-block: 1.5rem;
+    margin-block: var(--s-2) var(--s-3);
+    border-block: 1px solid var(--line);
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-height: 44px;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--ink);
+    font: 500 var(--t-sm) var(--f-body);
+    cursor: pointer;
+  }
+  .filter .tag {
+    border: 0;
+    padding: 0;
+  }
+  .filter > span:last-child {
+    font-family: var(--f-mono);
+    font-size: var(--t-xs);
+    color: var(--graphite);
+  }
+  .filter:hover {
+    border-color: var(--ink);
+  }
+  .filter[aria-pressed='true'] {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+  .filter[aria-pressed='true'] > span:last-child {
+    color: #aab6d6;
+  }
+  .legend {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+  .js .legend {
+    display: none;
+  }
+  .list {
+    list-style: none;
+    row-gap: var(--s-4);
+  }
+  .list__item {
+    grid-column: span 6;
+  }
+  .list__item--wide {
+    grid-column: 1 / span 8;
+  }
+  .list__item--wide + .list__item {
+    grid-column: 9 / span 4;
+    align-self: end;
+  }
+  .list__item[hidden] {
+    display: none;
+  }
+  .list.is-filtered .list__item {
+    grid-column: span 6;
+  }
+  @media (max-width: 860px) {
+    .list__item,
+    .list__item--wide,
+    .list__item--wide + .list__item,
+    .list.is-filtered .list__item {
+      grid-column: 1 / -1;
+    }
+  }
+</style>
+
+<script>
+  const wrap = document.querySelector<HTMLElement>('[data-filters]');
+  const list = document.querySelector<HTMLElement>('[data-list]');
+  const status = document.querySelector<HTMLElement>('[data-filter-status]');
+  if (wrap && list) {
+    wrap.hidden = false;
+    const btns = [...wrap.querySelectorAll<HTMLButtonElement>('[data-filter]')];
+    const items = [...list.querySelectorAll<HTMLElement>('[data-estado]')];
+    btns.forEach((b) =>
+      b.addEventListener('click', () => {
+        const f = b.dataset.filter!;
+        btns.forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        let n = 0;
+        items.forEach((it) => {
+          const show = f === 'todos' || it.dataset.estado === f;
+          it.hidden = !show;
+          if (show) n++;
+        });
+        list.classList.toggle('is-filtered', f !== 'todos');
+        if (status) status.textContent = `${n} ${n === 1 ? 'proyecto' : 'proyectos'} mostrados`;
+      })
+    );
+  }
+</script>
