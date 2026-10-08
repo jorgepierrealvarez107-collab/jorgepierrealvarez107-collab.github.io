@@ -1,4 +1,7 @@
-name: Publicar en GitHub Pages
+name: Redirigir GitHub Pages a alvra.com.mx
+
+# El sitio vive en el VPS (https://alvra.com.mx, ver scripts/desplegar-vps.sh).
+# GitHub Pages solo publica páginas que redirigen cada ruta al dominio.
 
 on:
   push:
@@ -14,19 +17,24 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  SITE_URL: https://alvra.com.mx
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: withastro/action@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-        env:
-          SITE_URL: https://jorgepierrealvarez107-collab.github.io
-          # Cuando exista el endpoint del formulario, añádelo como variable del
-          # repositorio (Settings → Variables) y descomenta la línea siguiente:
-          # PUBLIC_CONTACT_ENDPOINT: ${{ vars.PUBLIC_CONTACT_ENDPOINT }}
+          cache: npm
+      - run: npm ci
+      - run: npx astro build
+      - run: node scripts/paginas-redireccion.mjs "$SITE_URL" dist redireccion
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: redireccion
 
   deploy:
     needs: build
