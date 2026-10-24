@@ -1,0 +1,983 @@
+---
+/**
+ * Portafolio como libro físico: tapa dura, páginas de papel y hojeo realista
+ * (page-flip). Se pasa de página con un clic o toque en la hoja, arrastrando
+ * la esquina, con las flechas del teclado o con la barra inferior.
+ *
+ * Orden de páginas (en escritorio se ven por pares, izquierda/derecha):
+ *   0 tapa · 1 perfil | 2 datos · 3 índice | 4 manifiesto ·
+ *   texto | imágenes por proyecto · cierre | colofón · contratapa
+ * Así cada proyecto abre siempre en un pliego completo.
+ *
+ * Los proyectos salen de la misma colección que /proyectos/.
+ */
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Lamina from '../components/Lamina.astro';
+import { estados, site, whatsappUrl } from '../config/site';
+import { portafolio } from '../config/portafolio';
+
+const proyectos = (await getCollection('proyectos')).sort((a, b) => a.data.orden - b.data.orden);
+const num = (i: number) => String(i + 1).padStart(2, '0');
+const folio = (n: number) => String(n).padStart(2, '0');
+const PRIMERA = 5; // página del primer proyecto
+const pag = (i: number) => PRIMERA + i * 2;
+const cierre = PRIMERA + proyectos.length * 2;
+const presentacion = portafolio.presentacion ?? site.descripcion;
+const wa = whatsappUrl('Hola, vi su portafolio y me gustaría platicar sobre un proyecto.');
+const hayDemo = site.mostrarAvisosDemo && proyectos.some((p) => p.data.demo);
+---
+<Base title="Portafolio" description={`Portafolio de ${portafolio.autor}: proyectos de arquitectura y construcción presentados como libro.`}>
+  <section class="desk" aria-labelledby="pf-titulo">
+    <div class="wrap desk__head">
+      <p class="eyebrow">Portafolio · {portafolio.edicion}</p>
+      <h1 id="pf-titulo" class="sr-only">Portafolio de {portafolio.autor}</h1>
+      <p class="mono muted desk__hint" data-hint>Desplázate para leer el portafolio</p>
+    </div>
+
+    <div class="wrap">
+      <div class="desk__book" data-desk>
+        <div class="book" data-book>
+          <!-- 0 · Tapa -->
+          <div class="pg pg--cover" data-density="hard" data-label="Portada">
+            <svg class="cv__trazo" viewBox="0 0 400 560" preserveAspectRatio="none" aria-hidden="true">
+              <rect x="28" y="28" width="344" height="504" />
+              <line x1="28" y1="290" x2="250" y2="290" />
+              <line x1="290" y1="290" x2="372" y2="290" />
+              <line x1="270" y1="28" x2="270" y2="270" />
+              <line x1="270" y1="310" x2="270" y2="532" />
+              <path d="M8 28H20M28 8V20M380 28H392M372 8V20M8 532H20M28 540V552M380 532H392M372 540V552" />
+            </svg>
+            <div class="cv__txt">
+              <p class="cv__eb">{portafolio.autor}</p>
+              <p class="cv__title">Portafolio</p>
+              <p class="cv__sub">Arquitectura y construcción · {portafolio.edicion}</p>
+            </div>
+            <span class="cv__sq" aria-hidden="true"></span>
+          </div>
+
+          <!-- 1 · Perfil -->
+          <div class="pg" id="perfil" data-label="Perfil">
+            <div class="pg__in">
+              <p class="pg__mark">Porta<b>folio</b></p>
+              <h2 class="perfil__name">{portafolio.autor}</h2>
+              <p class="perfil__intro">{presentacion}</p>
+              {site.contacto.zonaServicio && <p class="pg__mono">{site.contacto.zonaServicio}</p>}
+              <span class="pg__folio" aria-hidden="true">01</span>
+            </div>
+          </div>
+
+          <!-- 2 · Datos -->
+          <div class="pg" data-label="Perfil">
+            <div class="pg__in">
+              {portafolio.formacion.length > 0 && (
+                <section class="dato">
+                  <h3 class="dato__t">Formación</h3>
+                  <ul>{portafolio.formacion.map((f) => <li><strong>{f.titulo}</strong> {f.lugar} <span class="muted">{f.periodo}</span></li>)}</ul>
+                </section>
+              )}
+              {portafolio.experiencia.length > 0 && (
+                <section class="dato">
+                  <h3 class="dato__t">Experiencia</h3>
+                  <ul>{portafolio.experiencia.map((e) => <li><strong>{e.puesto}</strong> {e.lugar} <span class="muted">{e.periodo}</span></li>)}</ul>
+                </section>
+              )}
+              <section class="dato">
+                <h3 class="dato__t">Alcance</h3>
+                <ul><li>Diseño arquitectónico</li><li>Proyecto ejecutivo</li><li>Construcción</li></ul>
+              </section>
+              {portafolio.software.length > 0 && (
+                <section class="dato">
+                  <h3 class="dato__t">Software</h3>
+                  <ul class="soft">
+                    {portafolio.software.map((s) => (
+                      <li><span class="soft__ini" aria-hidden="true">{s.replace(/[^A-Z]/g, '').slice(0, 2) || s[0]}</span>{s}</li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+              <section class="dato">
+                <h3 class="dato__t">Contacto</h3>
+                <ul class="contacto">
+                  {site.contacto.telefonoVisible && wa && <li><a href={wa}>{site.contacto.telefonoVisible}</a></li>}
+                  {site.contacto.email && <li><a href={`mailto:${site.contacto.email}`}>{site.contacto.email}</a></li>}
+                  {site.redes.instagram && <li><a href={site.redes.instagram}>Instagram</a></li>}
+                  {site.redes.linkedin && <li><a href={site.redes.linkedin}>LinkedIn</a></li>}
+                </ul>
+              </section>
+              <span class="pg__folio" aria-hidden="true">02</span>
+            </div>
+          </div>
+
+          <!-- 3 · Índice -->
+          <div class="pg" id="indice" data-label="Índice">
+            <div class="pg__in">
+              <div class="idx__head">
+                <p class="pg__mark">Porta<b>folio</b></p>
+                <h2 class="pg__mono">Índice</h2>
+              </div>
+              <ol class="idx">
+                {proyectos.map((p, i) => (
+                  <li>
+                    <a href={`#p-${p.id}`} data-goto={pag(i)}>
+                      <span class="idx__img">
+                        {p.data.portada ? (
+                          <Image src={p.data.portada} alt="" widths={[240, 400]} sizes="200px" />
+                        ) : (
+                          <Lamina dibujo={p.data.dibujo} modo="obra" />
+                        )}
+                        <span class="idx__num" aria-hidden="true">{num(i)}</span>
+                      </span>
+                      <span class="idx__name">{p.data.titulo}</span>
+                      <span class="pg__mono">p. {folio(pag(i))}</span>
+                    </a>
+                  </li>
+                ))}
+              </ol>
+              <span class="pg__folio" aria-hidden="true">03</span>
+            </div>
+          </div>
+
+          <!-- 4 · Manifiesto -->
+          <div class="pg pg--grid" data-label="Del trazo a la obra">
+            <div class="pg__in pg__in--center">
+              <p class="pg__mono">ALVRA STUDIO</p>
+              <p class="mani">Del trazo<br /><em>a la obra.</em></p>
+              <p class="mani__txt">Cada proyecto empieza como una línea en el papel y termina como un espacio construido. Estas páginas recorren ese camino.</p>
+              <span class="pg__folio" aria-hidden="true">04</span>
+            </div>
+          </div>
+
+          <!-- Proyectos: texto (izquierda) + imágenes (derecha) -->
+          {proyectos.map((p, i) => {
+            const d = p.data;
+            const ficha = [
+              ['Tipo', d.tipo],
+              ['Ubicación', d.ubicacion],
+              ['Superficie', d.superficie],
+              ['Año', d.anio],
+              ['Estado', estados[d.estado].label],
+              ['Alcance', d.alcance.join(' + ')],
+            ].filter(([, v]) => v);
+            return (
+              <>
+                <div class="pg" id={`p-${p.id}`} data-label={d.titulo}>
+                  <div class="pg__in">
+                    <p class="pg__mark">Porta<b>folio</b></p>
+                    <span class="pj__num" aria-hidden="true">{num(i)}</span>
+                    <h2 class="pj__title">{d.titulo}</h2>
+                    <p class="pj__res">{d.resumen}</p>
+                    <dl class="ficha">
+                      {ficha.map(([k, v]) => (<div><dt>{k}</dt><dd>{v}</dd></div>))}
+                    </dl>
+                    {d.decisiones.length > 0 && (
+                      <ol class="decis">
+                        {d.decisiones.map((x) => (<li><strong>{x.titulo}.</strong> {x.texto}</li>))}
+                      </ol>
+                    )}
+                    <a class="pj__more" href={`/proyectos/${p.id}/`}>Ver proyecto completo →</a>
+                    <span class="pg__folio" aria-hidden="true">{folio(pag(i))}</span>
+                  </div>
+                </div>
+                <div class="pg" data-label={d.titulo}>
+                  <div class="pg__in pg__in--media">
+                    <figure class="pj__main">
+                      {d.portada ? (
+                        <Image src={d.portada} alt={d.portadaAlt || d.titulo} widths={[480, 800, 1200]} sizes="(min-width: 900px) 40vw, 90vw" />
+                      ) : (
+                        <Lamina dibujo={d.dibujo} modo="obra" />
+                      )}
+                    </figure>
+                    <div class="pj__row">
+                      <figure class="pj__trazo">
+                        {d.trazo ? (
+                          <Image src={d.trazo} alt={`${d.titulo}: dibujo de líneas`} widths={[320, 560]} sizes="(min-width: 900px) 18vw, 45vw" />
+                        ) : (
+                          <Lamina dibujo={d.dibujo} modo="trazo" />
+                        )}
+                      </figure>
+                      <div class="pj__cap">
+                        <p class="pg__mono">{num(i)} · Trazo y obra</p>
+                        <p class="pj__capt">{d.titulo}</p>
+                        {d.imagenesIA && site.mostrarAvisosDemo && <p class="pg__mono pj__ia">Imágenes generadas con IA · demo</p>}
+                      </div>
+                    </div>
+                    <span class="pg__folio" aria-hidden="true">{folio(pag(i) + 1)}</span>
+                  </div>
+                </div>
+              </>
+            );
+          })}
+
+          <!-- Cierre -->
+          <div class="pg" data-label="Contacto">
+            <div class="pg__in pg__in--center">
+              <p class="pg__mono">Siguiente proyecto</p>
+              <p class="mani mani--sm">El próximo pliego <em>puede ser el tuyo.</em></p>
+              <a class="btn btn--accent pg__cta" href="/contacto/">Cuéntanos tu proyecto</a>
+              <span class="pg__folio" aria-hidden="true">{folio(cierre)}</span>
+            </div>
+          </div>
+
+          <!-- Colofón -->
+          <div class="pg" data-label="Colofón">
+            <div class="pg__in pg__in--center colofon">
+              <p class="pg__mono">Colofón</p>
+              <p>{portafolio.autor}<br />Portafolio de arquitectura y construcción<br />Edición {portafolio.edicion}</p>
+              {site.contacto.zonaServicio && <p>{site.contacto.zonaServicio}</p>}
+              {hayDemo && <p class="pg__mono">Contiene proyectos de demostración con imágenes generadas con IA.</p>}
+              <span class="pg__folio" aria-hidden="true">{folio(cierre + 1)}</span>
+            </div>
+          </div>
+
+          <!-- Contratapa -->
+          <div class="pg pg--cover pg--back" data-density="hard" data-label="Contratapa">
+            <div class="cv__txt">
+              <p class="cv__eb">{portafolio.autor}</p>
+              <p class="cv__sub">Del trazo a la obra</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fb__bar" data-bar hidden>
+        <button type="button" class="fb__btn" data-prev aria-label="Página anterior">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+        </button>
+        <div class="fb__info">
+          <p class="fb__label" aria-live="polite"><span data-fb-label></span> <span class="mono muted" data-fb-count></span></p>
+          <div class="fb__prog" aria-hidden="true"><i data-fb-prog></i></div>
+        </div>
+        <button type="button" class="fb__btn" data-next aria-label="Página siguiente">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style is:global>
+  /* ==========================================================================
+     Mesa y libro. Global: page-flip reubica las páginas en su propio
+     contenedor, fuera del alcance de los estilos con ámbito de Astro.
+     ========================================================================== */
+  .desk {
+    --paper-pg: #fbfaf6;
+    padding-block: var(--s-2) var(--s-3);
+    overflow-x: clip;
+    /* Una mesa clara con luz cenital, como una foto de producto. */
+    background:
+      radial-gradient(ellipse 70% 55% at 50% 42%, #f4f5f7, transparent 70%),
+      linear-gradient(180deg, #e3e6eb, #d5d9e0);
+  }
+  .desk__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
+    margin-bottom: var(--s-2);
+  }
+  .desk__book {
+    position: relative;
+    transition: transform 0.9s cubic-bezier(0.45, 0.05, 0.2, 1);
+  }
+  /* Sombra del libro sobre la mesa */
+  .desk__book::after {
+    content: '';
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    bottom: -18px;
+    height: 36px;
+    z-index: -1;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, rgb(10 20 48 / 0.28), transparent 70%);
+    filter: blur(6px);
+  }
+  .js .desk__book.is-front::after,
+  .js .desk__book.is-back::after {
+    left: 30%;
+    right: 30%;
+  }
+
+  /* ---------- Página ---------- */
+  .pg {
+    position: relative;
+    overflow: hidden;
+    container-type: size;
+    background-color: var(--paper-pg);
+    /* Grano de papel muy sutil */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .1 0 0 0 0 .1 0 0 0 0 .2 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    color: var(--ink);
+    font-size: clamp(12.5px, 2.5cqi, 15px);
+    line-height: 1.5;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  /* Sin JS (o antes de iniciar): páginas apiladas con proporción de libro. */
+  .book:not(.stf__parent) {
+    display: grid;
+    gap: var(--s-3);
+    justify-items: center;
+  }
+  .book:not(.stf__parent) .pg {
+    width: min(100%, 560px);
+    aspect-ratio: 560 / 780;
+    box-shadow: 0 18px 40px -24px rgb(10 20 48 / 0.45);
+  }
+  .js .book:not(.stf__parent) .pg:not(:first-child) {
+    display: none;
+  }
+  .js .book:not(.stf__parent) {
+    max-width: 420px;
+    margin-inline: auto;
+  }
+
+  /* Medianil: el papel se oscurece hacia el lomo. */
+  .pg.--left::before,
+  .pg.--right::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 3;
+    width: 12%;
+    pointer-events: none;
+  }
+  .pg.--left::before {
+    right: 0;
+    background: linear-gradient(270deg, rgb(10 20 48 / 0.16), rgb(10 20 48 / 0.04) 35%, transparent);
+  }
+  .pg.--right::before {
+    left: 0;
+    background: linear-gradient(90deg, rgb(10 20 48 / 0.16), rgb(10 20 48 / 0.04) 35%, transparent);
+  }
+  .--portrait .pg.--right::before {
+    width: 5%;
+  }
+  .stf__item {
+    cursor: pointer;
+  }
+  .stf__item a {
+    cursor: pointer;
+  }
+  /* page-flip solo respeta clics cuyo destino es el propio <a>/<button>. */
+  .stf__item a *,
+  .stf__item button * {
+    pointer-events: none;
+  }
+
+  .pg__in {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9em;
+    padding: 9cqi 8cqi 11cqi;
+  }
+  .pg__in--center {
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .pg__mark,
+  .pg__mono,
+  .pg__folio,
+  .dato__t,
+  .ficha dt {
+    font-family: var(--f-mono);
+    font-size: 0.72em;
+    font-weight: 500;
+    font-variation-settings: 'wdth' 110;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--graphite);
+  }
+  .pg__mark b {
+    color: var(--ink);
+    font-weight: 700;
+  }
+  .pg__folio {
+    position: absolute;
+    bottom: 5cqi;
+  }
+  .pg.--left .pg__folio,
+  .--portrait .pg .pg__folio {
+    left: 8cqi;
+  }
+  .pg.--right .pg__folio {
+    right: 8cqi;
+    left: auto;
+  }
+  .--portrait .pg.--right .pg__folio {
+    right: 8cqi;
+    left: auto;
+  }
+
+  /* ---------- Tapas ---------- */
+  .pg--cover {
+    background: linear-gradient(155deg, #1a2e68, var(--navy) 55%, #0b173b);
+    color: var(--paper);
+  }
+  .pg--cover::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    /* Brillo del cartón y canto de la tapa */
+    background:
+      linear-gradient(115deg, rgb(255 255 255 / 0.08), transparent 40%),
+      linear-gradient(90deg, rgb(0 0 0 / 0.35), transparent 4%);
+  }
+  .pg--back::after {
+    background:
+      linear-gradient(245deg, rgb(255 255 255 / 0.06), transparent 40%),
+      linear-gradient(270deg, rgb(0 0 0 / 0.35), transparent 4%);
+  }
+  .cv__trazo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: rgb(157 176 255 / 0.5);
+    stroke-width: 1;
+  }
+  .cv__trazo * {
+    vector-effect: non-scaling-stroke;
+  }
+  .cv__txt {
+    position: absolute;
+    left: 7%;
+    right: 7%;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4cqi 0;
+    text-align: center;
+    background: var(--navy);
+  }
+  .pg--back .cv__txt {
+    background: transparent;
+  }
+  .cv__eb,
+  .cv__sub {
+    font-family: var(--f-mono);
+    font-size: max(9px, 2.4cqi);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #aab6d6;
+  }
+  .cv__title {
+    margin-block: 0.25em 0.35em;
+    margin-right: -0.22em;
+    font-size: 7.6cqi;
+    font-weight: 300;
+    font-variation-settings: 'wdth' 125;
+    letter-spacing: 0.22em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+  .cv__sq {
+    position: absolute;
+    top: calc(50% - 1.6cqi);
+    right: calc(7% - 1.6cqi);
+    width: 3.2cqi;
+    height: 3.2cqi;
+    background: var(--paper);
+  }
+
+  /* ---------- Perfil ---------- */
+  .perfil__name {
+    margin-top: auto;
+    font-size: 11cqi;
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  .perfil__intro {
+    font-size: 1.15em;
+    line-height: 1.45;
+  }
+  .dato + .dato {
+    padding-top: 0.9em;
+    border-top: 1px solid var(--line);
+  }
+  .dato__t {
+    margin-bottom: 0.4em;
+    color: var(--accent);
+  }
+  .dato ul {
+    display: grid;
+    gap: 0.2em;
+    list-style: none;
+  }
+  .soft {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5em !important;
+  }
+  .soft li {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+  .soft__ini {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.2em;
+    height: 2.2em;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+    font-size: 0.75em;
+    font-weight: 700;
+  }
+  .contacto a {
+    overflow-wrap: anywhere;
+    text-decoration-color: var(--line);
+    text-underline-offset: 3px;
+  }
+
+  /* ---------- Índice ---------- */
+  .idx__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .idx {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.1em 0.9em;
+    list-style: none;
+  }
+  .idx a {
+    display: grid;
+    gap: 0.15em;
+    text-decoration: none;
+  }
+  .idx__img {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--paper-2);
+  }
+  .idx__img img,
+  .idx__img svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(1) contrast(1.05);
+    transition: filter 0.4s var(--ease);
+  }
+  .idx a:hover .idx__img img,
+  .idx a:hover .idx__img svg,
+  .idx a:focus-visible .idx__img img {
+    filter: none;
+  }
+  .idx__num {
+    position: absolute;
+    top: 0.1em;
+    left: 0.25em;
+    font-size: 2.6em;
+    font-weight: 200;
+    font-variation-settings: 'wdth' 80;
+    line-height: 1;
+    color: #fff;
+    mix-blend-mode: difference;
+  }
+  .idx__name {
+    font-size: 0.92em;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  /* ---------- Manifiesto, cierre y colofón ---------- */
+  .pg--grid {
+    background-image:
+      linear-gradient(rgb(31 63 191 / 0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(31 63 191 / 0.07) 1px, transparent 1px);
+    background-size: 6cqi 6cqi;
+  }
+  .mani {
+    font-size: 10cqi;
+    font-weight: 700;
+    font-variation-settings: 'wdth' 118;
+    line-height: 0.98;
+    letter-spacing: -0.02em;
+  }
+  .mani em {
+    font-style: italic;
+    font-weight: 400;
+    font-variation-settings: 'wdth' 100;
+    color: var(--accent);
+  }
+  .mani--sm {
+    font-size: 8cqi;
+  }
+  .mani__txt {
+    max-width: 30ch;
+    color: var(--graphite);
+  }
+  .pg__cta {
+    min-height: 44px;
+    font-size: 0.95em;
+  }
+  .colofon {
+    align-items: center;
+    text-align: center;
+    color: var(--graphite);
+    font-size: 0.9em;
+  }
+
+  /* ---------- Proyecto ---------- */
+  .pj__num {
+    font-size: 15cqi;
+    font-weight: 200;
+    font-variation-settings: 'wdth' 80;
+    line-height: 0.8;
+    color: var(--accent);
+  }
+  .pj__title {
+    font-size: 7cqi;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+  .pj__res {
+    color: var(--graphite);
+  }
+  .ficha {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 0;
+    border-top: 1px solid var(--ink);
+  }
+  .ficha div {
+    padding: 0.4em 0.6em 0.4em 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .ficha dd {
+    margin: 0.1em 0 0;
+    font-size: 0.92em;
+    font-weight: 500;
+  }
+  .decis {
+    display: grid;
+    gap: 0.4em;
+    padding-left: 1.1em;
+    font-size: 0.86em;
+    line-height: 1.4;
+  }
+  .decis li::marker {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  /* En hojas bajas (pantallas pequeñas) el detalle queda en la página del proyecto. */
+  @container (max-height: 620px) {
+    .decis {
+      display: none;
+    }
+  }
+  @container (max-height: 470px) {
+    .pj__res {
+      display: none;
+    }
+  }
+  .pj__more {
+    align-self: flex-start;
+    margin-top: auto;
+    color: var(--accent);
+    font-size: 0.85em;
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid currentColor;
+  }
+  .pg__in--media {
+    gap: 4cqi;
+  }
+  .pj__main,
+  .pj__trazo {
+    margin: 0;
+    overflow: hidden;
+  }
+  .pj__main {
+    flex: 1;
+    min-height: 0;
+  }
+  .pj__main img,
+  .pj__main svg {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .pj__row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4cqi;
+    align-items: end;
+  }
+  .pj__trazo img,
+  .pj__trazo svg {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .pj__capt {
+    margin-top: 0.3em;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+  .pj__ia {
+    margin-top: 0.6em;
+    font-size: 0.62em;
+  }
+
+  /* ---------- page-flip (estilos base del paquete) ---------- */
+  .stf__parent {
+    position: relative;
+    margin-inline: auto;
+    display: block;
+    box-sizing: border-box;
+    transform: translateZ(0);
+    touch-action: pan-y;
+  }
+  .stf__wrapper {
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .stf__parent canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .stf__block {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    perspective: 2000px;
+  }
+  .stf__item {
+    display: none;
+    position: absolute;
+    transform-style: preserve-3d;
+  }
+  .stf__outerShadow,
+  .stf__innerShadow,
+  .stf__hardShadow,
+  .stf__hardInnerShadow {
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  /* ---------- Barra ---------- */
+  .fb__bar {
+    position: sticky;
+    bottom: max(12px, env(safe-area-inset-bottom));
+    z-index: 20;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: 520px;
+    margin: var(--s-3) auto 0;
+    padding: 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--paper) 94%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 12px 30px -14px rgb(10 20 48 / 0.4);
+  }
+  .fb__btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background: #fff;
+    color: var(--ink);
+    cursor: pointer;
+    transition:
+      background-color 0.2s,
+      color 0.2s,
+      border-color 0.2s;
+  }
+  .fb__btn:hover:not(:disabled) {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+  .fb__btn:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+  .fb__btn svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .fb__info {
+    min-width: 0;
+    text-align: center;
+  }
+  .fb__label {
+    overflow: hidden;
+    font-size: var(--t-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .fb__label .mono {
+    margin-left: 0.4rem;
+  }
+  .fb__prog {
+    height: 2px;
+    margin: 0.35rem 1rem 0;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--line);
+  }
+  .fb__prog i {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s var(--ease);
+  }
+</style>
+
+<script>
+  import { PageFlip } from 'page-flip/dist/js/page-flip.module.js';
+
+  const el = document.querySelector<HTMLElement>('[data-book]');
+  const desk = document.querySelector<HTMLElement>('[data-desk]');
+  if (el && desk) {
+    const pages = [...el.querySelectorAll<HTMLElement>(':scope > .pg')];
+    const bar = document.querySelector<HTMLElement>('[data-bar]')!;
+    const hint = document.querySelector<HTMLElement>('[data-hint]')!;
+    const prevBtn = document.querySelector<HTMLButtonElement>('[data-prev]')!;
+    const nextBtn = document.querySelector<HTMLButtonElement>('[data-next]')!;
+    const labelEl = document.querySelector<HTMLElement>('[data-fb-label]')!;
+    const countEl = document.querySelector<HTMLElement>('[data-fb-count]')!;
+    const progEl = document.querySelector<HTMLElement>('[data-fb-prog]')!;
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const coarse = matchMedia('(pointer: coarse)').matches;
+
+    // En pantallas angostas la hoja es más alta (proporción de teléfono) para que el texto sea legible.
+    const narrow = matchMedia('(max-width: 699px)');
+    const [W, H] = narrow.matches ? [400, 640] : [560, 780];
+    const header = document.querySelector<HTMLElement>('[data-hdr]')?.offsetHeight ?? 68;
+    const maxHeight = Math.max(400, innerHeight - header - (narrow.matches ? 140 : 190));
+    // page-flip calcula el alto a partir del ancho: el tope de alto se traduce en un tope de ancho.
+    const maxWidth = Math.min(640, Math.floor((maxHeight * W) / H));
+
+    const idFromHash = decodeURIComponent(location.hash.slice(1));
+    const start = Math.max(0, pages.findIndex((p) => p.id && p.id === idFromHash));
+
+    const book = new PageFlip(el, {
+      width: W,
+      height: H,
+      size: 'stretch',
+      minWidth: 260,
+      maxWidth,
+      minHeight: 380,
+      maxHeight,
+      showCover: true,
+      usePortrait: true,
+      drawShadow: true,
+      maxShadowOpacity: 0.5,
+      flippingTime: reduce ? 250 : 950,
+      showPageCorners: !reduce,
+      mobileScrollSupport: true,
+      swipeDistance: 30,
+      startPage: start,
+    });
+    book.loadFromHTML(pages);
+
+    const last = pages.length - 1;
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    // Libro cerrado: se centra sobre la mesa en lugar de quedarse en una mitad.
+    function center(i: number, moving = false) {
+      const landscape = book.getOrientation() === 'landscape';
+      const front = landscape && !moving && i === 0;
+      const back = landscape && !moving && i >= last;
+      desk!.classList.toggle('is-front', front);
+      desk!.classList.toggle('is-back', back);
+      const shift = el!.offsetWidth / 4;
+      desk!.style.transform = front ? `translateX(${-shift}px)` : back ? `translateX(${shift}px)` : '';
+    }
+
+    function render(i: number) {
+      const p = pages[i];
+      labelEl.textContent = p?.dataset.label ?? '';
+      countEl.textContent = `${pad(i + 1)} / ${pad(pages.length)}`;
+      progEl.style.transform = `scaleX(${(i + 1) / pages.length})`;
+      prevBtn.disabled = i === 0;
+      nextBtn.disabled = i >= last;
+      center(i);
+    }
+
+    book.on('flip', (e) => {
+      const i = Number(e.data);
+      render(i);
+      const id = pages[i]?.id;
+      if (id) history.replaceState(null, '', `#${id}`);
+    });
+    book.on('changeState', (e) => {
+      // Al empezar a abrir o cerrar, el libro vuelve al centro de la mesa.
+      if (e.data === 'flipping' || e.data === 'user_fold') center(book.getCurrentPageIndex(), true);
+      if (e.data === 'read') center(book.getCurrentPageIndex());
+    });
+    book.on('changeOrientation', () => render(book.getCurrentPageIndex()));
+    addEventListener('resize', () => center(book.getCurrentPageIndex()));
+
+    prevBtn.addEventListener('click', () => book.flipPrev());
+    nextBtn.addEventListener('click', () => book.flipNext());
+
+    // Índice: abre el libro en la página del proyecto.
+    el.addEventListener('click', (e) => {
+      const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-goto]');
+      if (!a) return;
+      e.preventDefault();
+      book.flip(Number(a.dataset.goto));
+    });
+
+    let visible = false;
+    new IntersectionObserver(([en]) => (visible = en.isIntersecting)).observe(desk);
+    document.addEventListener('keydown', (e) => {
+      if (!visible || e.altKey || e.ctrlKey || e.metaKey) return;
+      if ((e.target as HTMLElement).closest('input, textarea, select')) return;
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        book.flipNext();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        book.flipPrev();
+      }
+    });
+
+    hint.textContent = coarse
+      ? 'Toca la hoja o arrastra la esquina para pasar la página'
+      : 'Haz clic en la hoja o arrastra la esquina · también con ← →';
+    bar.hidden = false;
+    render(start);
+
+    // La proporción de la hoja cambia entre teléfono y pantalla grande: se recarga al cruzar el corte.
+    narrow.addEventListener('change', () => location.reload());
+  }
+</script>

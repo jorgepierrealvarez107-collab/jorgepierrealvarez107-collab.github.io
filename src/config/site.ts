@@ -35,6 +35,7 @@ export const site = {
 
 export const navegacion = [
   { href: '/proyectos/', label: 'Proyectos' },
+  { href: '/portafolio/', label: 'Portafolio' },
   { href: '/servicios/', label: 'Servicios' },
   { href: '/estudio/', label: 'Estudio' },
   { href: '/proceso/', label: 'Proceso' },
